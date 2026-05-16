@@ -73,17 +73,17 @@ class GlobalHeader extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           // Profile - simplified on smaller screens if necessary, but here we just wrap in Flexible
-          Flexible(
+          const Flexible(
             flex: 2,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 20,
                   backgroundImage: NetworkImage('https://ui-avatars.com/api/?name=Admin+DZ&background=006633&color=fff'),
                 ),
-                const SizedBox(width: 12),
-                const Flexible(
+                SizedBox(width: 12),
+                Flexible(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +107,7 @@ class GlobalHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(LucideIcons.chevronDown, size: 16, color: AppColors.textSecondary),
+                Icon(LucideIcons.chevronDown, size: 16, color: AppColors.textSecondary),
               ],
             ),
           ),

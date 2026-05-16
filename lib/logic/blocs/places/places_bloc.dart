@@ -17,7 +17,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             'rating': 4.8,
             'status': 'Live',
             'location': 'Algiers',
-            'image': 'https://images.unsplash.com/photo-1596122329051-189f3032517d?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=100&q=80',
           },
           {
             'id': '2',
@@ -26,7 +26,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             'rating': 4.9,
             'status': 'Live',
             'location': 'Illizi',
-            'image': 'https://images.unsplash.com/photo-1620601672322-26154c148286?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=100&q=80',
           },
           {
             'id': '3',
@@ -35,7 +35,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             'rating': 4.7,
             'status': 'Hidden',
             'location': 'Oran',
-            'image': 'https://images.unsplash.com/photo-1596122329051-189f3032517d?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1565552607561-75294aa52bb5?auto=format&fit=crop&w=100&q=80',
           },
           {
             'id': '4',
@@ -44,7 +44,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             'rating': 4.6,
             'status': 'Live',
             'location': 'Constantine',
-            'image': 'https://images.unsplash.com/photo-1596122329051-189f3032517d?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&w=100&q=80',
           },
         ];
         emit(PlacesLoaded(mockPlaces));

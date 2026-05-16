@@ -16,7 +16,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
             'cost': 15000,
             'expiry': 'Dec 2024',
             'category': 'Luxury Stay',
-            'image': 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80',
           },
           {
             'id': 'r2',
@@ -25,7 +25,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
             'cost': 25000,
             'expiry': 'Nov 2024',
             'category': 'Adventure',
-            'image': 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=600&q=80',
           },
           {
             'id': 'r3',
@@ -34,7 +34,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
             'cost': 5000,
             'expiry': 'Oct 2024',
             'category': 'Dining',
-            'image': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=100&q=80',
+            'image': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
           },
         ];
         emit(RewardsLoaded(mockRewards));

@@ -9,7 +9,8 @@ import '../widgets/loading_shimmer.dart';
 import '../widgets/engagement_chart.dart';
 
 class OverviewScreen extends StatelessWidget {
-  const OverviewScreen({super.key});
+  final VoidCallback? onViewAll;
+  const OverviewScreen({super.key, this.onViewAll});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class OverviewScreen extends StatelessWidget {
   }
 
   Widget _buildLoadingState() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
         children: [
@@ -108,7 +109,7 @@ class OverviewScreen extends StatelessWidget {
                           ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: onViewAll,
                       child: const Text('View All'),
                     ),
                   ],
@@ -123,18 +124,15 @@ class OverviewScreen extends StatelessWidget {
                         0: FlexColumnWidth(2),
                         1: FlexColumnWidth(2),
                         2: FlexColumnWidth(1.5),
-                        3: FlexColumnWidth(1.5),
-                        4: FlexColumnWidth(1.5),
-                        5: FlexColumnWidth(1),
+                        3: FlexColumnWidth(1.2),
+                        4: FlexColumnWidth(1.3),
+                        5: FlexColumnWidth(1.5),
                       },
                       children: [
                         _buildHeaderRow(),
                         ...state.recentInquiries.map((inquiry) => _buildDataRow(
-                              inquiry['venue'],
-                              inquiry['inquirer'],
-                              inquiry['date'],
-                              inquiry['capacity'],
-                              inquiry['status'],
+                              context,
+                              inquiry,
                             )),
                       ],
                     ),
@@ -193,30 +191,28 @@ class OverviewScreen extends StatelessWidget {
   }
 
   TableRow _buildDataRow(
-    String venue,
-    String inquirer,
-    String date,
-    String capacity,
-    String status,
+    BuildContext context,
+    Map<String, dynamic> inquiry,
   ) {
+    String status = inquiry['status'];
     bool isConfirmed = status == 'Confirmed';
     return TableRow(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(venue, style: const TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(inquiry['venue'], style: const TextStyle(fontWeight: FontWeight.w600)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(inquirer),
+          child: Text(inquiry['inquirer']),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(date),
+          child: Text(inquiry['date']),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(capacity),
+          child: Text(inquiry['capacity']),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -241,12 +237,103 @@ class OverviewScreen extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: IconButton(
-            icon: const Icon(LucideIcons.moreHorizontal, size: 20),
-            onPressed: () {},
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(LucideIcons.eye, size: 18, color: AppColors.dzGreen),
+                onPressed: () => _showInquiryDetails(context, inquiry),
+                tooltip: 'View Details',
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: Icon(
+                  isConfirmed ? LucideIcons.checkCircle : LucideIcons.check,
+                  size: 18,
+                  color: isConfirmed ? Colors.grey : AppColors.elitePurple,
+                ),
+                onPressed: isConfirmed
+                    ? null
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Inquiry confirmed successfully')),
+                        );
+                      },
+                tooltip: 'Confirm',
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.algerianRed),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Inquiry deleted')),
+                  );
+                },
+                tooltip: 'Delete',
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  void _showInquiryDetails(BuildContext context, Map<String, dynamic> inquiry) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Row(
+          children: [
+            Icon(LucideIcons.calendarCheck, color: AppColors.dzGreen),
+            SizedBox(width: 12),
+            Text('Inquiry Details'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailItem('Venue', inquiry['venue']),
+              _buildDetailItem('Inquirer', inquiry['inquirer']),
+              _buildDetailItem('Event Date', inquiry['date']),
+              _buildDetailItem('Guest Count', inquiry['capacity']),
+              const SizedBox(height: 16),
+              const Text('Requirements:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Customer requested a premium catering package and VIP seating arrangements.'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(value),
+        ],
+      ),
     );
   }
 }

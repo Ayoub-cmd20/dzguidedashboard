@@ -176,11 +176,11 @@ class VenueInquiriesScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(LucideIcons.calendarCheck, color: AppColors.dzGreen),
-            const SizedBox(width: 12),
-            const Text('Inquiry Details'),
+            Icon(LucideIcons.calendarCheck, color: AppColors.dzGreen),
+            SizedBox(width: 12),
+            Text('Inquiry Details'),
           ],
         ),
         content: SizedBox(

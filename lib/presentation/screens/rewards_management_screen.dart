@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../logic/blocs/rewards/rewards_bloc.dart';
-import '../../logic/blocs/rewards/rewards_event.dart';
 import '../../logic/blocs/rewards/rewards_state.dart';
 import '../widgets/loading_shimmer.dart';
 
@@ -111,6 +110,12 @@ class RewardsManagementScreen extends StatelessWidget {
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 180,
+                width: double.infinity,
+                color: Colors.grey.shade100,
+                child: const Icon(LucideIcons.image, size: 40, color: Colors.grey),
+              ),
             ),
           ),
           Padding(
@@ -173,8 +178,22 @@ class RewardsManagementScreen extends StatelessWidget {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(LucideIcons.edit3, color: AppColors.textSecondary),
-                      onPressed: () {},
+                      icon: const Icon(LucideIcons.edit, color: AppColors.dzGreen, size: 20),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Edit reward: ${reward['title']}')),
+                        );
+                      },
+                      tooltip: 'Edit Reward',
+                    ),
+                    IconButton(
+                      icon: const Icon(LucideIcons.trash2, color: AppColors.algerianRed, size: 20),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Reward archived')),
+                        );
+                      },
+                      tooltip: 'Delete Reward',
                     ),
                   ],
                 ),

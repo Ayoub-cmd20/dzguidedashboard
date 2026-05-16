@@ -187,7 +187,18 @@ class PlacesManagementScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(place['image'], width: 48, height: 48, fit: BoxFit.cover),
+            child: Image.network(
+              place['image'],
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 48,
+                height: 48,
+                color: Colors.grey.shade100,
+                child: const Icon(LucideIcons.image, size: 20, color: Colors.grey),
+              ),
+            ),
           ),
         ),
         Padding(
@@ -218,7 +229,7 @@ class PlacesManagementScreen extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Switch(
             value: isLive,
-            activeColor: AppColors.dzGreen,
+            activeThumbColor: AppColors.dzGreen,
             onChanged: (val) {
               context.read<PlacesBloc>().add(UpdatePlaceStatus(place['id'], val));
             },
@@ -271,7 +282,7 @@ class PlacesManagementScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   decoration: _inputDecoration('Category'),
-                  value: place?['category'],
+                  initialValue: place?['category'],
                   items: ['Historical', 'Nature', 'Luxury']
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),

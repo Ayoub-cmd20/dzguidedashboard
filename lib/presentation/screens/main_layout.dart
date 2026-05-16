@@ -6,6 +6,7 @@ import 'places_management_screen.dart';
 import 'venue_inquiries_screen.dart';
 import 'user_management_screen.dart';
 import 'rewards_management_screen.dart';
+import 'settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -47,12 +48,14 @@ class _MainLayoutState extends State<MainLayout> {
                   child: IndexedStack(
                     index: _selectedIndex,
                     children: [
-                      const OverviewScreen(),
+                      OverviewScreen(
+                        onViewAll: () => setState(() => _selectedIndex = 2),
+                      ),
                       const PlacesManagementScreen(),
                       const VenueInquiriesScreen(),
                       const UserManagementScreen(),
                       const RewardsManagementScreen(),
-                      const Center(child: Text('Settings Screen - Coming Soon')),
+                      const SettingsScreen(),
                     ],
                   ),
                 ),

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../logic/blocs/users/users_bloc.dart';
-import '../../logic/blocs/users/users_event.dart';
 import '../../logic/blocs/users/users_state.dart';
 import '../widgets/loading_shimmer.dart';
 
@@ -75,7 +74,7 @@ class UserManagementScreen extends StatelessWidget {
                   1: FlexColumnWidth(1.5),
                   2: FlexColumnWidth(1.5),
                   3: FlexColumnWidth(1.5),
-                  4: FlexColumnWidth(1),
+                  4: FlexColumnWidth(1.5),
                 },
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
@@ -133,8 +132,10 @@ class UserManagementScreen extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage(user['avatar']),
                 radius: 18,
+                backgroundColor: Colors.grey.shade100,
+                backgroundImage: NetworkImage(user['avatar']),
+                onBackgroundImageError: (e, s) => const Icon(LucideIcons.user, size: 20),
               ),
               const SizedBox(width: 12),
               Column(
@@ -171,12 +172,90 @@ class UserManagementScreen extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: IconButton(
-            icon: const Icon(LucideIcons.moreVertical, size: 20),
-            onPressed: () {},
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(LucideIcons.eye, size: 18, color: AppColors.dzGreen),
+                onPressed: () => _showUserDetails(context, user),
+                tooltip: 'View Profile',
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(LucideIcons.edit2, size: 18, color: AppColors.elitePurple),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Edit profile for ${user['name']}')),
+                  );
+                },
+                tooltip: 'Edit Tier',
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.algerianRed),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('User account restricted')),
+                  );
+                },
+                tooltip: 'Restrict',
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  void _showUserDetails(BuildContext context, Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Row(
+          children: [
+            Icon(LucideIcons.user, color: AppColors.dzGreen),
+            SizedBox(width: 12),
+            Text('Traveler Profile'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: NetworkImage(user['avatar']),
+            ),
+            const SizedBox(height: 16),
+            Text(user['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            Text(user['email'], style: const TextStyle(color: AppColors.textSecondary)),
+            const Divider(height: 32),
+            _buildDetailRow('Elite Status', user['tier']),
+            _buildDetailRow('Points Balance', '${user['points']} pts'),
+            _buildDetailRow('Member Since', user['joined']),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value, style: const TextStyle(color: AppColors.textSecondary)),
+        ],
+      ),
     );
   }
 }
