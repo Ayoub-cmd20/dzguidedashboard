@@ -7,8 +7,16 @@ import '../../logic/blocs/places/places_event.dart';
 import '../../logic/blocs/places/places_state.dart';
 import '../widgets/loading_shimmer.dart';
 
-class PlacesManagementScreen extends StatelessWidget {
+class PlacesManagementScreen extends StatefulWidget {
   const PlacesManagementScreen({super.key});
+
+  @override
+  State<PlacesManagementScreen> createState() => _PlacesManagementScreenState();
+}
+
+class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
+  String _searchQuery = '';
+  String _selectedCategory = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +77,12 @@ class PlacesManagementScreen extends StatelessWidget {
     if (state is PlacesLoading) {
       return const LoadingShimmer(width: double.infinity, height: 600, borderRadius: 25);
     } else if (state is PlacesLoaded) {
+      final filteredPlaces = state.places.where((p) {
+        final matchesSearch = p['title'].toLowerCase().contains(_searchQuery.toLowerCase());
+        final matchesCategory = _selectedCategory == 'All' || p['category'] == _selectedCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -89,6 +103,7 @@ class PlacesManagementScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextField(
+                      onChanged: (value) => setState(() => _searchQuery = value),
                       decoration: InputDecoration(
                         hintText: 'Search destinations...',
                         prefixIcon: const Icon(LucideIcons.search, size: 20),
@@ -104,13 +119,10 @@ class PlacesManagementScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  _buildFilterChip('All'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Historical'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Nature'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Luxury'),
+                  ...['All', 'Historical', 'Nature', 'Luxury'].map((cat) => Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: _buildFilterChip(cat),
+                  )),
                 ],
               ),
               const SizedBox(height: 24),
@@ -126,7 +138,7 @@ class PlacesManagementScreen extends StatelessWidget {
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
                   _buildTableHeader(),
-                  ...state.places.map((place) => _buildTableRow(context, place)),
+                  ...filteredPlaces.map((place) => _buildTableRow(context, place)),
                 ],
               ),
             ],
@@ -140,11 +152,11 @@ class PlacesManagementScreen extends StatelessWidget {
   }
 
   Widget _buildFilterChip(String label) {
-    bool isSelected = label == 'All';
+    bool isSelected = _selectedCategory == label;
     return FilterChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (v) {},
+      onSelected: (v) => setState(() => _selectedCategory = label),
       backgroundColor: Colors.white,
       selectedColor: AppColors.dzGreen.withValues(alpha: 0.1),
       labelStyle: TextStyle(
@@ -207,7 +219,7 @@ class PlacesManagementScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(place['title'], style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(place['location'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(place['location'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -246,7 +258,23 @@ class PlacesManagementScreen extends StatelessWidget {
               IconButton(
                 icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.algerianRed),
                 onPressed: () {
-                  context.read<PlacesBloc>().add(DeletePlace(place['id']));
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Delete Destination'),
+                      content: Text('Are you sure you want to delete ${place['title']}?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () {
+                            context.read<PlacesBloc>().add(DeletePlace(place['id']));
+                            Navigator.pop(ctx);
+                          },
+                          child: const Text('Delete', style: TextStyle(color: AppColors.algerianRed)),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ],
@@ -257,9 +285,16 @@ class PlacesManagementScreen extends StatelessWidget {
   }
 
   void _showPlaceForm(BuildContext context, {Map<String, dynamic>? place}) {
+    final titleController = TextEditingController(text: place?['title']);
+    final descController = TextEditingController(text: place?['description']);
+    final latController = TextEditingController(text: place?['lat']?.toString());
+    final lngController = TextEditingController(text: place?['lng']?.toString());
+    final imgController = TextEditingController(text: place?['image']);
+    String selectedCat = place?['category'] ?? 'Historical';
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(place == null ? 'Add New Destination' : 'Edit Destination'),
         content: SizedBox(
@@ -268,36 +303,47 @@ class PlacesManagementScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTextField('Title', initialValue: place?['title']),
+                _buildTextField('Title', controller: titleController),
                 const SizedBox(height: 16),
-                _buildTextField('Description', maxLines: 3),
+                _buildTextField('Description', controller: descController, maxLines: 3),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Latitude')),
+                    Expanded(child: _buildTextField('Latitude', controller: latController)),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildTextField('Longitude')),
+                    Expanded(child: _buildTextField('Longitude', controller: lngController)),
                   ],
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   decoration: _inputDecoration('Category'),
-                  initialValue: place?['category'],
+                  value: selectedCat,
                   items: ['Historical', 'Nature', 'Luxury']
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (v) {},
+                  onChanged: (v) => selectedCat = v!,
                 ),
                 const SizedBox(height: 16),
-                _buildTextField('Image URL', initialValue: place?['image']),
+                _buildTextField('Image URL', controller: imgController),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              final newPlace = {
+                'name': titleController.text,
+                'description': descController.text,
+                'lat': double.tryParse(latController.text) ?? 0.0,
+                'lng': double.tryParse(lngController.text) ?? 0.0,
+                'categories': [selectedCat],
+                'imageUrl': imgController.text,
+              };
+              context.read<PlacesBloc>().add(AddPlace(newPlace));
+              Navigator.pop(ctx);
+            },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.dzGreen, foregroundColor: Colors.white),
             child: Text(place == null ? 'Create' : 'Save Changes'),
           ),
@@ -306,9 +352,9 @@ class PlacesManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String label, {int maxLines = 1, String? initialValue}) {
+  Widget _buildTextField(String label, {int maxLines = 1, TextEditingController? controller}) {
     return TextFormField(
-      initialValue: initialValue,
+      controller: controller,
       maxLines: maxLines,
       decoration: _inputDecoration(label),
     );

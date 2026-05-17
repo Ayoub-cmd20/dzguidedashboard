@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/screens/main_layout.dart';
+import 'presentation/screens/login_screen.dart';
+import 'logic/blocs/auth/auth_bloc.dart';
+import 'logic/blocs/auth/auth_event.dart';
+import 'logic/blocs/auth/auth_state.dart';
 import 'logic/blocs/overview/overview_bloc.dart';
 import 'logic/blocs/overview/overview_event.dart';
 import 'logic/blocs/places/places_bloc.dart';
@@ -26,6 +30,9 @@ class DZGuideAdminApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
+          create: (context) => AuthBloc()..add(CheckAuthStatus()),
+        ),
+        BlocProvider(
           create: (context) => OverviewBloc()..add(LoadOverviewData()),
         ),
         BlocProvider(
@@ -45,7 +52,19 @@ class DZGuideAdminApp extends StatelessWidget {
         title: 'DZ Guide Admin Dashboard',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const MainLayout(),
+        home: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is Authenticated) {
+              return const MainLayout();
+            } else if (state is AuthLoading) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            } else {
+              return const LoginScreen();
+            }
+          },
+        ),
       ),
     );
   }

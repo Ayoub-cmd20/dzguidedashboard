@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../logic/blocs/rewards/rewards_bloc.dart';
+import '../../logic/blocs/rewards/rewards_event.dart';
 import '../../logic/blocs/rewards/rewards_state.dart';
 import '../widgets/loading_shimmer.dart';
 
@@ -50,7 +51,7 @@ class RewardsManagementScreen extends StatelessWidget {
           ],
         ),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {}, // TODO: Implement Add Reward form
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.elitePurple,
             foregroundColor: Colors.white,
@@ -68,6 +69,19 @@ class RewardsManagementScreen extends StatelessWidget {
     if (state is RewardsLoading) {
       return const LoadingShimmer(width: double.infinity, height: 600, borderRadius: 25);
     } else if (state is RewardsLoaded) {
+      if (state.rewards.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(LucideIcons.packageOpen, size: 64, color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              const Text('No rewards found. Start by creating one!', 
+                style: TextStyle(color: AppColors.textSecondary)),
+            ],
+          ),
+        );
+      }
       return GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
@@ -177,28 +191,52 @@ class RewardsManagementScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    IconButton(
-                      icon: const Icon(LucideIcons.edit, color: AppColors.dzGreen, size: 20),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Edit reward: ${reward['title']}')),
-                        );
-                      },
-                      tooltip: 'Edit Reward',
-                    ),
-                    IconButton(
-                      icon: const Icon(LucideIcons.trash2, color: AppColors.algerianRed, size: 20),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Reward archived')),
-                        );
-                      },
-                      tooltip: 'Delete Reward',
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(LucideIcons.edit, color: AppColors.dzGreen, size: 20),
+                          onPressed: () => _showEditCostDialog(context, reward),
+                          tooltip: 'Edit Points',
+                        ),
+                        IconButton(
+                          icon: const Icon(LucideIcons.trash2, color: AppColors.algerianRed, size: 20),
+                          onPressed: () {
+                             // TODO: Implement Delete Reward event
+                          },
+                          tooltip: 'Delete Reward',
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCostDialog(BuildContext context, Map<String, dynamic> reward) {
+    final controller = TextEditingController(text: reward['cost'].toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Edit Cost for ${reward['title']}'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Points Cost'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              final newCost = int.tryParse(controller.text) ?? reward['cost'];
+              context.read<RewardsBloc>().add(UpdateRewardCost(reward['id'], newCost));
+              Navigator.pop(ctx);
+            },
+            child: const Text('Update'),
           ),
         ],
       ),

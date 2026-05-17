@@ -1,0 +1,112 @@
+{
+    "projectId": "69b3f38b00343fcaac9e",
+    "projectName": "Dz Guide",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "settings": {
+        "services": {
+            "account": true,
+            "databases": true,
+            "functions": true,
+            "sites": true,
+            "messaging": true
+        },
+        "protocols": {
+            "rest": true,
+            "graphql": true,
+            "websocket": true
+        },
+        "auth": {
+            "methods": {
+                "email-password": true,
+                "magic-url": true
+            },
+            "security": {
+                "sessionsLimit": 10,
+                "passwordDictionary": true
+            }
+        }
+    },
+    "tablesDB": [
+        {
+            "$id": "dz_guide_db",
+            "name": "DZ Guide Database",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "places",
+            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Places",
+            "enabled": true,
+            "columns": [
+                { "key": "name", "type": "string", "required": true, "size": 255 },
+                { "key": "description", "type": "text", "required": true },
+                { "key": "imageUrl", "type": "string", "required": true, "size": 255 },
+                { "key": "categories", "type": "string", "required": true, "size": 1000, "array": true },
+                { "key": "lat", "type": "double", "required": true },
+                { "key": "lng", "type": "double", "required": true },
+                { "key": "rating", "type": "double", "required": false, "default": 4.5 },
+                { "key": "reviewsCount", "type": "integer", "required": false, "default": 0 },
+                { "key": "favoritesCount", "type": "integer", "required": false, "default": 0 },
+                { "key": "isLive", "type": "boolean", "required": false, "default": true }
+            ]
+        },
+        {
+            "$id": "users",
+            "$permissions": ["read(\"team:admins\")", "update(\"team:admins\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Users Metadata",
+            "enabled": true,
+            "columns": [
+                { "key": "name", "type": "string", "required": true, "size": 255 },
+                { "key": "email", "type": "string", "required": true, "size": 255 },
+                { "key": "tier", "type": "string", "required": true, "size": 50, "default": "Silver" },
+                { "key": "points", "type": "integer", "required": true, "default": 0 },
+                { "key": "avatarUrl", "type": "string", "required": false, "size": 255 }
+            ]
+        },
+        {
+            "$id": "inquiries",
+            "$permissions": ["create(\"users\")", "read(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Inquiries",
+            "enabled": true,
+            "columns": [
+                { "key": "userId", "type": "string", "required": true, "size": 36 },
+                { "key": "placeId", "type": "string", "required": true, "size": 36 },
+                { "key": "eventDate", "type": "datetime", "required": true },
+                { "key": "guestCount", "type": "integer", "required": true },
+                { "key": "requirements", "type": "text", "required": true },
+                { "key": "status", "type": "string", "required": false, "size": 20, "default": "pending" }
+            ],
+            "indexes": [
+                { "key": "status_idx", "type": "key", "columns": ["status"] }
+            ]
+        },
+        {
+            "$id": "rewards",
+            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Rewards",
+            "enabled": true,
+            "columns": [
+                { "key": "title", "type": "string", "required": true, "size": 255 },
+                { "key": "description", "type": "text", "required": true },
+                { "key": "cost", "type": "integer", "required": true },
+                { "key": "category", "type": "string", "required": true, "size": 100 },
+                { "key": "imageUrl", "type": "string", "required": true, "size": 255 },
+                { "key": "expiry", "type": "string", "required": false, "size": 100 }
+            ]
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "bucket_places",
+            "name": "Places Images",
+            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "enabled": true
+        }
+    ]
+}
