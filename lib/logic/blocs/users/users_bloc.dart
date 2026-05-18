@@ -14,7 +14,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
       try {
         final response = await _appwrite.databases.listDocuments(
           databaseId: AppwriteService.databaseId,
-          collectionId: usersCollectionId,
+          collectionId: AppwriteService.usersCollection,
           queries: [Query.orderDesc('\$createdAt')],
         );
 
@@ -25,8 +25,8 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
             'email': doc.data['email'],
             'tier': doc.data['tier'],
             'points': doc.data['points'],
-            'joined': doc.$createdAt,
-            'avatar': doc.data['avatarUrl'] ?? 'https://ui-avatars.com/api/?name=${doc.data['name']}&background=random',
+            'avatarUrl': doc.data['avatarUrl'] ?? 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(doc.data['name'])}&background=random',
+            'createdAt': doc.$createdAt,
           };
         }).toList();
 
@@ -40,7 +40,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
       try {
         await _appwrite.databases.updateDocument(
           databaseId: AppwriteService.databaseId,
-          collectionId: usersCollectionId,
+          collectionId: AppwriteService.usersCollection,
           documentId: event.userId,
           data: {'tier': event.tier},
         );

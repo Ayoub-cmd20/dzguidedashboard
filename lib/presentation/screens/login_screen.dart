@@ -47,8 +47,20 @@ class _LoginScreenState extends State<LoginScreen> {
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message), backgroundColor: AppColors.algerianRed),
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Login Error'),
+                    content: Text(state.message),
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
                 );
               }
             },
@@ -65,12 +77,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.dzGreen,
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: const Icon(LucideIcons.map, color: Colors.white, size: 30),
+                        child: const Icon(
+                          LucideIcons.map,
+                          color: Colors.white,
+                          size: 30,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Text(
                         'DZ Guide',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
                               color: AppColors.dzGreen,
                               fontWeight: FontWeight.bold,
                               fontSize: 32,
@@ -111,10 +128,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: const Icon(LucideIcons.lock, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? LucideIcons.eyeOff : LucideIcons.eye,
+                          _isPasswordVisible
+                              ? LucideIcons.eyeOff
+                              : LucideIcons.eye,
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                        onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible,
+                        ),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -132,12 +153,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                              context.read<AuthBloc>().add(
-                                    LoginRequested(
-                                      _emailController.text,
-                                      _passwordController.text,
+                              final email = _emailController.text.trim();
+                              final password = _passwordController.text;
+
+                              if (email.isEmpty || password.isEmpty) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Missing Fields'),
+                                    content: const Text(
+                                      'Please enter both email and password.',
                                     ),
-                                  );
+                                    backgroundColor: Colors.white,
+                                    surfaceTintColor: Colors.transparent,
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                return;
+                              }
+
+                              context.read<AuthBloc>().add(
+                                LoginRequested(email, password),
+                              );
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.dzGreen,
@@ -151,7 +194,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               'Login to Dashboard',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                   ),

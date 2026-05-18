@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:appwrite/appwrite.dart';
 import '../../../core/services/appwrite_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';

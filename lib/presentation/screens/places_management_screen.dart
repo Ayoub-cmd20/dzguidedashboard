@@ -29,9 +29,7 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
             children: [
               _buildHeader(context),
               const SizedBox(height: 32),
-              Expanded(
-                child: _buildBody(context, state),
-              ),
+              Expanded(child: _buildBody(context, state)),
             ],
           ),
         );
@@ -48,9 +46,9 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
           children: [
             Text(
               'Places Management',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               'Manage all Algerian destinations and their status',
@@ -64,7 +62,9 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
             backgroundColor: AppColors.dzGreen,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           icon: const Icon(LucideIcons.plus, size: 20),
           label: const Text('Add New Destination'),
@@ -75,11 +75,18 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
 
   Widget _buildBody(BuildContext context, PlacesState state) {
     if (state is PlacesLoading) {
-      return const LoadingShimmer(width: double.infinity, height: 600, borderRadius: 25);
+      return const LoadingShimmer(
+        width: double.infinity,
+        height: 600,
+        borderRadius: 25,
+      );
     } else if (state is PlacesLoaded) {
       final filteredPlaces = state.places.where((p) {
-        final matchesSearch = p['title'].toLowerCase().contains(_searchQuery.toLowerCase());
-        final matchesCategory = _selectedCategory == 'All' || p['category'] == _selectedCategory;
+        final matchesSearch = p['title'].toLowerCase().contains(
+          _searchQuery.toLowerCase(),
+        );
+        final matchesCategory =
+            _selectedCategory == 'All' || p['category'] == _selectedCategory;
         return matchesSearch && matchesCategory;
       }).toList();
 
@@ -103,7 +110,8 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                 children: [
                   Expanded(
                     child: TextField(
-                      onChanged: (value) => setState(() => _searchQuery = value),
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
                       decoration: InputDecoration(
                         hintText: 'Search destinations...',
                         prefixIcon: const Icon(LucideIcons.search, size: 20),
@@ -119,10 +127,12 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  ...['All', 'Historical', 'Nature', 'Luxury'].map((cat) => Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: _buildFilterChip(cat),
-                  )),
+                  ...['All', 'Historical', 'Nature', 'Luxury'].map(
+                    (cat) => Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _buildFilterChip(cat),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -138,7 +148,9 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
                   _buildTableHeader(),
-                  ...filteredPlaces.map((place) => _buildTableRow(context, place)),
+                  ...filteredPlaces.map(
+                    (place) => _buildTableRow(context, place),
+                  ),
                 ],
               ),
             ],
@@ -165,29 +177,33 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: isSelected ? AppColors.dzGreen : Colors.grey.shade200),
+        side: BorderSide(
+          color: isSelected ? AppColors.dzGreen : Colors.grey.shade200,
+        ),
       ),
     );
   }
 
   TableRow _buildTableHeader() {
     return TableRow(
-      children: [
-        'Image',
-        'Destination',
-        'Category',
-        'Rating',
-        'Status',
-        'Actions',
-      ]
-          .map((text) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                child: Text(
-                  text,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+      children:
+          ['Image', 'Destination', 'Category', 'Rating', 'Status', 'Actions']
+              .map(
+                (text) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 8,
+                  ),
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
-              ))
-          .toList(),
+              )
+              .toList(),
     );
   }
 
@@ -208,7 +224,11 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                 width: 48,
                 height: 48,
                 color: Colors.grey.shade100,
-                child: const Icon(LucideIcons.image, size: 20, color: Colors.grey),
+                child: const Icon(
+                  LucideIcons.image,
+                  size: 20,
+                  color: Colors.grey,
+                ),
               ),
             ),
           ),
@@ -218,8 +238,19 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(place['title'], style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(place['location'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(
+                place['title'],
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                place['location'],
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -243,7 +274,9 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
             value: isLive,
             activeThumbColor: AppColors.dzGreen,
             onChanged: (val) {
-              context.read<PlacesBloc>().add(UpdatePlaceStatus(place['id'], val));
+              context.read<PlacesBloc>().add(
+                UpdatePlaceStatus(place['id'], val),
+              );
             },
           ),
         ),
@@ -252,25 +285,43 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(LucideIcons.edit2, size: 18, color: AppColors.elitePurple),
+                icon: const Icon(
+                  LucideIcons.edit2,
+                  size: 18,
+                  color: AppColors.elitePurple,
+                ),
                 onPressed: () => _showPlaceForm(context, place: place),
               ),
               IconButton(
-                icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.algerianRed),
+                icon: const Icon(
+                  LucideIcons.trash2,
+                  size: 18,
+                  color: AppColors.algerianRed,
+                ),
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: const Text('Delete Destination'),
-                      content: Text('Are you sure you want to delete ${place['title']}?'),
+                      content: Text(
+                        'Are you sure you want to delete ${place['title']}?',
+                      ),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
                         TextButton(
                           onPressed: () {
-                            context.read<PlacesBloc>().add(DeletePlace(place['id']));
+                            context.read<PlacesBloc>().add(
+                              DeletePlace(place['id']),
+                            );
                             Navigator.pop(ctx);
                           },
-                          child: const Text('Delete', style: TextStyle(color: AppColors.algerianRed)),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.algerianRed),
+                          ),
                         ),
                       ],
                     ),
@@ -287,8 +338,12 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
   void _showPlaceForm(BuildContext context, {Map<String, dynamic>? place}) {
     final titleController = TextEditingController(text: place?['title']);
     final descController = TextEditingController(text: place?['description']);
-    final latController = TextEditingController(text: place?['lat']?.toString());
-    final lngController = TextEditingController(text: place?['lng']?.toString());
+    final latController = TextEditingController(
+      text: place?['lat']?.toString(),
+    );
+    final lngController = TextEditingController(
+      text: place?['lng']?.toString(),
+    );
     final imgController = TextEditingController(text: place?['image']);
     String selectedCat = place?['category'] ?? 'Historical';
 
@@ -305,19 +360,33 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
               children: [
                 _buildTextField('Title', controller: titleController),
                 const SizedBox(height: 16),
-                _buildTextField('Description', controller: descController, maxLines: 3),
+                _buildTextField(
+                  'Description',
+                  controller: descController,
+                  maxLines: 3,
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Latitude', controller: latController)),
+                    Expanded(
+                      child: _buildTextField(
+                        'Latitude',
+                        controller: latController,
+                      ),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildTextField('Longitude', controller: lngController)),
+                    Expanded(
+                      child: _buildTextField(
+                        'Longitude',
+                        controller: lngController,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   decoration: _inputDecoration('Category'),
-                  value: selectedCat,
+                  initialValue: selectedCat,
                   items: ['Historical', 'Nature', 'Luxury']
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
@@ -330,7 +399,10 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               final newPlace = {
@@ -344,7 +416,10 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
               context.read<PlacesBloc>().add(AddPlace(newPlace));
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.dzGreen, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.dzGreen,
+              foregroundColor: Colors.white,
+            ),
             child: Text(place == null ? 'Create' : 'Save Changes'),
           ),
         ],
@@ -352,7 +427,11 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
     );
   }
 
-  Widget _buildTextField(String label, {int maxLines = 1, TextEditingController? controller}) {
+  Widget _buildTextField(
+    String label, {
+    int maxLines = 1,
+    TextEditingController? controller,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,

@@ -2,7 +2,7 @@ import 'package:appwrite/appwrite.dart';
 
 class AppwriteService {
   static final AppwriteService _instance = AppwriteService._internal();
-  
+
   factory AppwriteService() {
     return _instance;
   }
@@ -17,10 +17,8 @@ class AppwriteService {
   late final Storage storage;
 
   AppwriteService._internal() {
-    client = Client()
-        .setEndpoint(endpoint)
-        .setProject(projectId);
-    
+    client = Client().setEndpoint(endpoint).setProject(projectId);
+
     account = Account(client);
     databases = Databases(client);
     storage = Storage(client);
@@ -29,14 +27,17 @@ class AppwriteService {
   // Collection IDs
   static const String placesCollection = 'places';
   static const String inquiriesCollection = 'inquiries';
-  static const String eventsCollection = 'events';
-  static const String reviewsCollection = 'reviews';
   static const String rewardsCollection = 'rewards';
   static const String usersCollection = 'users';
+  static const String adminsCollection = 'admins';
 
   // Bucket IDs
   static const String placesBucket = 'bucket_places';
-  static const String eventsBucket = 'bucket_events';
+
+  // Collection field names
+  static const String fieldId = '\$id';
+  static const String fieldCreatedAt = '\$createdAt';
+  static const String fieldUpdatedAt = '\$UpdatedAt';
 
   String getImageUrl(String bucketId, String fileId) {
     return '$endpoint/storage/buckets/$bucketId/files/$fileId/view?project=$projectId';

@@ -13,7 +13,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       try {
         final response = await _appwrite.databases.listDocuments(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'rewards',
+          collectionId: AppwriteService.rewardsCollection,
           queries: [Query.orderDesc('\$createdAt')],
         );
 
@@ -23,9 +23,9 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
             'title': doc.data['title'],
             'description': doc.data['description'],
             'cost': doc.data['cost'],
-            'expiry': doc.data['expiry'] ?? 'No expiry',
             'category': doc.data['category'],
-            'image': doc.data['imageUrl'],
+            'imageUrl': doc.data['imageUrl'],
+            'expiry': doc.data['expiry'],
           };
         }).toList();
 
@@ -39,13 +39,26 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       try {
         await _appwrite.databases.updateDocument(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'rewards',
+          collectionId: AppwriteService.rewardsCollection,
           documentId: event.id,
           data: {'cost': event.newCost},
         );
         add(LoadRewards());
       } catch (e) {
         emit(RewardsError('Failed to update cost: ${e.toString()}'));
+      }
+    });
+
+    on<DeleteReward>((event, emit) async {
+      try {
+        await _appwrite.databases.deleteDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.rewardsCollection,
+          documentId: event.id,
+        );
+        add(LoadRewards());
+      } catch (e) {
+        emit(RewardsError('Failed to delete reward: ${e.toString()}'));
       }
     });
   }

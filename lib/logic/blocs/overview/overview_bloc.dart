@@ -12,11 +12,9 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
     on<LoadOverviewData>((event, emit) async {
       emit(OverviewLoading());
       try {
-        // 1. Fetch Stats in parallel
+        // Fetch all stats in parallel
         final results = await Future.wait([
-          // Total Travelers (Users)
-          // Note: listUsers requires Admin API key or special permissions. 
-          // For now, we fetch from a 'traveler_metadata' or simulate if not accessible.
+          // Total Places
           _appwrite.databases.listDocuments(
             databaseId: AppwriteService.databaseId,
             collectionId: AppwriteService.placesCollection,
@@ -26,7 +24,13 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
           _appwrite.databases.listDocuments(
             databaseId: AppwriteService.databaseId,
             collectionId: AppwriteService.inquiriesCollection,
-            queries: [Query.equal('status', 'pending')],
+            queries: [Query.equal('status', 'pending'), Query.limit(1)],
+          ),
+          // Total Users
+          _appwrite.databases.listDocuments(
+            databaseId: AppwriteService.databaseId,
+            collectionId: AppwriteService.usersCollection,
+            queries: [Query.limit(1)],
           ),
           // Recent Inquiries (Detailed list)
           _appwrite.databases.listDocuments(
@@ -34,41 +38,72 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
             collectionId: AppwriteService.inquiriesCollection,
             queries: [Query.orderDesc('\$createdAt'), Query.limit(5)],
           ),
+          // Total Rewards
+          _appwrite.databases.listDocuments(
+            databaseId: AppwriteService.databaseId,
+            collectionId: AppwriteService.rewardsCollection,
+            queries: [Query.limit(1)],
+          ),
         ]);
 
         final totalPlaces = (results[0]).total;
         final pendingInquiriesCount = (results[1]).total;
-        final recentInquiriesDocs = (results[2]).documents;
+        final totalUsers = (results[2]).total;
+        final recentInquiriesDocs = (results[3]).documents;
+        final totalRewards = (results[4]).total;
 
-        // 2. Build Stats List
+        // Build Stats List from real data
         final stats = [
-          {'title': 'Active Destinations', 'value': totalPlaces.toString(), 'trend': 'Live', 'icon': 'mapPin'},
-          {'title': 'Pending Inquiries', 'value': pendingInquiriesCount.toString(), 'trend': 'Action Required', 'icon': 'clock'},
-          {'title': 'Points Redeemed', 'value': '850K', 'trend': '+18%', 'icon': 'gift'}, // Placeholder for now
-          {'title': 'Global Travelers', 'value': '12.8K', 'trend': '+12%', 'icon': 'users'}, // Placeholder
+          {
+            'title': 'Active Destinations',
+            'value': totalPlaces.toString(),
+            'trend': 'Live',
+            'icon': 'mapPin'
+          },
+          {
+            'title': 'Pending Inquiries',
+            'value': pendingInquiriesCount.toString(),
+            'trend': 'Action Required',
+            'icon': 'clock'
+          },
+          {
+            'title': 'Global Travelers',
+            'value': totalUsers.toString(),
+            'trend': 'Active Users',
+            'icon': 'users'
+          },
+          {
+            'title': 'Available Rewards',
+            'value': totalRewards.toString(),
+            'trend': 'In Catalog',
+            'icon': 'gift'
+          },
         ];
 
-        // 3. Resolve Venue Names for Recent Inquiries
+        // Resolve Venue Names for Recent Inquiries
         final List<Map<String, dynamic>> inquiries = [];
         for (var doc in recentInquiriesDocs) {
-          String venueName = 'Loading...';
+          String placeName = 'Unknown Place';
           try {
             final place = await _appwrite.databases.getDocument(
               databaseId: AppwriteService.databaseId,
               collectionId: AppwriteService.placesCollection,
               documentId: doc.data['placeId'],
             );
-            venueName = place.data['name'];
+            placeName = place.data['name'];
           } catch (_) {
-            venueName = 'Unknown Venue';
+            // placeName remains 'Unknown Place'
           }
 
+          final status = (doc.data['status'] ?? 'pending').toString();
+          final statusFormatted = status[0].toUpperCase() + status.substring(1);
+
           inquiries.add({
-            'venue': venueName,
-            'inquirer': 'User ${doc.data['userId'].toString().substring(0, 5)}',
-            'date': DateFormat('MMM dd, yyyy').format(DateTime.parse(doc.data['eventDate'])),
-            'capacity': '${doc.data['guestCount']} Guests',
-            'status': doc.data['status'][0].toUpperCase() + doc.data['status'].substring(1),
+            'placeName': placeName,
+            'userId': doc.data['userId'],
+            'eventDate': DateFormat('MMM dd, yyyy').format(DateTime.parse(doc.data['eventDate'])),
+            'guestCount': doc.data['guestCount'],
+            'status': statusFormatted,
           });
         }
 
