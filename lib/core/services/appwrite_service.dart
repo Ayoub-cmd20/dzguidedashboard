@@ -1,4 +1,6 @@
 import 'package:appwrite/appwrite.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
 class AppwriteService {
   static final AppwriteService _instance = AppwriteService._internal();
@@ -41,5 +43,31 @@ class AppwriteService {
 
   String getImageUrl(String bucketId, String fileId) {
     return '$endpoint/storage/buckets/$bucketId/files/$fileId/view?project=$projectId';
+  }
+
+  Future<String> uploadImage(File file, String fileName) async {
+    try {
+      final response = await storage.createFile(
+        bucketId: placesBucket,
+        fileId: ID.unique(),
+        file: InputFile.fromPath(path: file.path, filename: fileName),
+      );
+      return response.$id;
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  Future<String> uploadImageBytes(Uint8List bytes, String fileName) async {
+    try {
+      final response = await storage.createFile(
+        bucketId: placesBucket,
+        fileId: ID.unique(),
+        file: InputFile.fromBytes(bytes: bytes, filename: fileName),
+      );
+      return response.$id;
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
   }
 }

@@ -36,7 +36,7 @@
     "tables": [
         {
             "$id": "places",
-            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Places",
             "enabled": true,
@@ -57,7 +57,7 @@
         },
         {
             "$id": "users",
-            "$permissions": ["read(\"team:admins\")", "update(\"team:admins\")"],
+            "$permissions": ["read(\"label:admin\")", "update(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Users Metadata",
             "enabled": true,
@@ -73,7 +73,7 @@
         },
         {
             "$id": "inquiries",
-            "$permissions": ["create(\"users\")", "read(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["create(\"users\")", "read(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Inquiries",
             "enabled": true,
@@ -90,7 +90,7 @@
         },
         {
             "$id": "rewards",
-            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Rewards",
             "enabled": true,
@@ -107,7 +107,7 @@
         },
         {
             "$id": "admins",
-            "$permissions": ["read(\"team:admins\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["read(\"label:admin\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Admins",
             "enabled": true,
@@ -122,7 +122,7 @@
         },
         {
             "$id": "events",
-            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "databaseId": "dz_guide_db",
             "name": "Events",
             "enabled": true,
@@ -133,10 +133,25 @@
                 { "key": "imageUrl",    "type": "string",   "required": true, "array": false, "size": 255,   "xdefault": null, "encrypt": false },
                 { "key": "placeId",     "type": "string",   "required": true, "array": false, "size": 36,    "xdefault": null, "encrypt": false },
                 { "key": "date",        "type": "datetime", "required": true, "array": false, "xdefault": null },
-                { "key": "category",    "type": "string",   "required": true, "array": false, "size": 100,   "xdefault": null, "encrypt": false },
-                { "key": "isLive",      "type": "boolean",  "required": false,"array": false, "xdefault": null },
-                { "key": "attendeesCount", "type": "integer", "required": false, "array": false, "min": null, "max": null, "xdefault": null },
-                { "key": "favoritesCount", "type": "integer", "required": false, "array": false, "min": null, "max": null, "xdefault": null }
+                { "key": "category",    "type": "string",   "required": true, "array": false, "size": 100,   "xdefault": null, "encrypt": false }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "reviews",
+            "$permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Reviews",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "userId",    "type": "string",   "required": true,  "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "userName",  "type": "string",   "required": true,  "array": false, "size": 255,  "xdefault": null, "encrypt": false },
+                { "key": "placeId",   "type": "string",   "required": true,  "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "eventId",   "type": "string",   "required": false, "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "comment",   "type": "string",   "required": true,  "array": false, "size": 5000, "xdefault": null, "encrypt": false },
+                { "key": "rating",    "type": "double",   "required": true,  "array": false, "min": 1, "max": 5, "xdefault": null },
+                { "key": "createdAt", "type": "datetime", "required": true,  "array": false, "xdefault": null }
             ],
             "indexes": []
         }
@@ -145,7 +160,7 @@
         {
             "$id": "bucket_places",
             "name": "Places Images",
-            "$permissions": ["read(\"any\")", "create(\"team:admins\")", "update(\"team:admins\")", "delete(\"team:admins\")"],
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
             "enabled": true
         }
     ]

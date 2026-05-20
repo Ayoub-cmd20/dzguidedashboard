@@ -24,7 +24,10 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             if (doc.data['categories'] is List) {
               categories = List<String>.from(doc.data['categories']);
             } else if (doc.data['categories'] is String) {
-              categories = (doc.data['categories'] as String).split(',').map((c) => c.trim()).toList();
+              categories = (doc.data['categories'] as String)
+                  .split(',')
+                  .map((c) => c.trim())
+                  .toList();
             }
           } catch (_) {
             categories = ['General'];
@@ -57,7 +60,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
           'name': event.place['name'] ?? '',
           'description': event.place['description'] ?? '',
           'imageUrl': event.place['imageUrl'] ?? '',
-          'categories': event.place['categories'] is String 
+          'categories': event.place['categories'] is String
               ? event.place['categories']
               : (event.place['categories'] as List?)?.join(',') ?? 'General',
           'lat': event.place['lat'] ?? 0.0,
@@ -77,6 +80,35 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
         add(LoadPlaces());
       } catch (e) {
         emit(PlacesError('Failed to add place: ${e.toString()}'));
+      }
+    });
+
+    on<UpdatePlace>((event, emit) async {
+      try {
+        final placeData = {
+          'name': event.place['name'] ?? '',
+          'description': event.place['description'] ?? '',
+          'imageUrl': event.place['imageUrl'] ?? '',
+          'categories': event.place['categories'] is String
+              ? event.place['categories']
+              : (event.place['categories'] as List?)?.join(',') ?? 'General',
+          'lat': event.place['lat'] ?? 0.0,
+          'lng': event.place['lng'] ?? 0.0,
+          'rating': event.place['rating'] ?? 0.0,
+          'reviewsCount': event.place['reviewsCount'] ?? 0,
+          'favoritesCount': event.place['favoritesCount'] ?? 0,
+          'isLive': event.place['isLive'] ?? false,
+        };
+
+        await _appwrite.databases.updateDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          documentId: event.id,
+          data: placeData,
+        );
+        add(LoadPlaces());
+      } catch (e) {
+        emit(PlacesError('Failed to update place: ${e.toString()}'));
       }
     });
 
