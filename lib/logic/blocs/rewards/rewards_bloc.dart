@@ -1,58 +1,64 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:appwrite/appwrite.dart';
+import '../../../core/services/appwrite_service.dart';
 import 'rewards_event.dart';
 import 'rewards_state.dart';
 
 class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
+  final AppwriteService _appwrite = AppwriteService();
+
   RewardsBloc() : super(RewardsInitial()) {
     on<LoadRewards>((event, emit) async {
       emit(RewardsLoading());
       try {
-        await Future.delayed(const Duration(milliseconds: 800));
-        final mockRewards = [
-          {
-            'id': 'r1',
-            'title': 'Algiers Palace Suite',
-            'description': 'One night stay in the presidential suite with panoramic views.',
-            'cost': 15000,
-            'expiry': 'Dec 2024',
-            'category': 'Luxury Stay',
-            'image': 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80',
-          },
-          {
-            'id': 'r2',
-            'title': 'Sahara Desert Tour',
-            'description': '3-day guided luxury tour through the Tassili n\'Ajjer dunes.',
-            'cost': 25000,
-            'expiry': 'Nov 2024',
-            'category': 'Adventure',
-            'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=600&q=80',
-          },
-          {
-            'id': 'r3',
-            'title': 'Constantine Gourmet Dining',
-            'description': 'Fine dining experience for two at the historic bridges restaurant.',
-            'cost': 5000,
-            'expiry': 'Oct 2024',
-            'category': 'Dining',
-            'image': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
-          },
-        ];
-        emit(RewardsLoaded(mockRewards));
+        final response = await _appwrite.databases.listDocuments(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.rewardsCollection,
+          queries: [Query.orderDesc('\$createdAt')],
+        );
+
+        final rewards = response.documents.map((doc) {
+          return {
+            'id': doc.$id,
+            'title': doc.data['title'],
+            'description': doc.data['description'],
+            'cost': doc.data['cost'],
+            'category': doc.data['category'],
+            'imageUrl': doc.data['imageUrl'],
+            'expiry': doc.data['expiry'],
+          };
+        }).toList();
+
+        emit(RewardsLoaded(rewards));
       } catch (e) {
-        emit(RewardsError('Failed to load rewards'));
+        emit(RewardsError('Failed to load rewards: ${e.toString()}'));
       }
     });
 
-    on<UpdateRewardCost>((event, emit) {
-      if (state is RewardsLoaded) {
-        final current = (state as RewardsLoaded).rewards;
-        final updated = current.map((r) {
-          if (r['id'] == event.id) {
-            return {...r, 'cost': event.newCost};
-          }
-          return r;
-        }).toList();
-        emit(RewardsLoaded(updated));
+    on<UpdateRewardCost>((event, emit) async {
+      try {
+        await _appwrite.databases.updateDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.rewardsCollection,
+          documentId: event.id,
+          data: {'cost': event.newCost},
+        );
+        add(LoadRewards());
+      } catch (e) {
+        emit(RewardsError('Failed to update cost: ${e.toString()}'));
+      }
+    });
+
+    on<DeleteReward>((event, emit) async {
+      try {
+        await _appwrite.databases.deleteDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.rewardsCollection,
+          documentId: event.id,
+        );
+        add(LoadRewards());
+      } catch (e) {
+        emit(RewardsError('Failed to delete reward: ${e.toString()}'));
       }
     });
   }

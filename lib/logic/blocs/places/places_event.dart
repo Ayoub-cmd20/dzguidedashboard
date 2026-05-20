@@ -7,6 +7,12 @@ class AddPlace extends PlacesEvent {
   AddPlace(this.place);
 }
 
+class UpdatePlace extends PlacesEvent {
+  final String id;
+  final Map<String, dynamic> place;
+  UpdatePlace(this.id, this.place);
+}
+
 class UpdatePlaceStatus extends PlacesEvent {
   final String id;
   final bool isLive;

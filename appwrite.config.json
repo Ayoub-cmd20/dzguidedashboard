@@ -1,0 +1,167 @@
+{
+    "projectId": "69b3f38b00343fcaac9e",
+    "projectName": "Dz Guide",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "settings": {
+        "services": {
+            "account": true,
+            "databases": true,
+            "functions": true,
+            "sites": true,
+            "messaging": true
+        },
+        "protocols": {
+            "rest": true,
+            "graphql": true,
+            "websocket": true
+        },
+        "auth": {
+            "methods": {
+                "email-password": true,
+                "magic-url": true
+            },
+            "security": {
+                "sessionsLimit": 10,
+                "passwordDictionary": true
+            }
+        }
+    },
+    "tablesDB": [
+        {
+            "$id": "dz_guide_db",
+            "name": "DZ Guide Database",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "places",
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Places",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "name",           "type": "string",  "required": true,  "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "description",    "type": "string",  "required": true,  "array": false, "size": 10000, "xdefault": null, "encrypt": false },
+                { "key": "imageUrl",       "type": "string",  "required": true,  "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "categories",     "type": "string",  "required": true,  "array": false, "size": 1000,  "xdefault": null, "encrypt": false },
+                { "key": "lat",            "type": "double",  "required": true,  "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "lng",            "type": "double",  "required": true,  "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "rating",         "type": "double",  "required": false, "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "reviewsCount",   "type": "integer", "required": false, "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "favoritesCount", "type": "integer", "required": false, "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "isLive",         "type": "boolean", "required": false, "array": false, "xdefault": null }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "users",
+            "$permissions": ["read(\"label:admin\")", "update(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Users Metadata",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "name",      "type": "string",  "required": true,  "array": false, "size": 255, "xdefault": null, "encrypt": false },
+                { "key": "email",     "type": "string",  "required": true,  "array": false, "size": 255, "xdefault": null, "encrypt": false },
+                { "key": "tier",      "type": "string",  "required": true,  "array": false, "size": 50,  "xdefault": null, "encrypt": false },
+                { "key": "points",    "type": "integer", "required": true,  "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "avatarUrl", "type": "string",  "required": false, "array": false, "size": 255, "xdefault": null, "encrypt": false }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "inquiries",
+            "$permissions": ["create(\"users\")", "read(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Inquiries",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "userId",       "type": "string",   "required": true,  "array": false, "size": 36,    "xdefault": null, "encrypt": false },
+                { "key": "placeId",      "type": "string",   "required": true,  "array": false, "size": 36,    "xdefault": null, "encrypt": false },
+                { "key": "eventDate",    "type": "datetime", "required": true,  "array": false, "xdefault": null },
+                { "key": "guestCount",   "type": "integer",  "required": true,  "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "requirements", "type": "string",   "required": true,  "array": false, "size": 10000, "xdefault": null, "encrypt": false },
+                { "key": "status",       "type": "string",   "required": false, "array": false, "size": 20,    "xdefault": null, "encrypt": false }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "rewards",
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Rewards",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "title",       "type": "string",  "required": true,  "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "description", "type": "string",  "required": true,  "array": false, "size": 10000, "xdefault": null, "encrypt": false },
+                { "key": "cost",        "type": "integer", "required": true,  "array": false, "min": null, "max": null, "xdefault": null },
+                { "key": "category",    "type": "string",  "required": true,  "array": false, "size": 100,   "xdefault": null, "encrypt": false },
+                { "key": "imageUrl",    "type": "string",  "required": true,  "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "expiry",      "type": "string",  "required": false, "array": false, "size": 100,   "xdefault": null, "encrypt": false }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "admins",
+            "$permissions": ["read(\"label:admin\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Admins",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "userId",    "type": "string",   "required": true,  "array": false, "size": 36,  "xdefault": null, "encrypt": false },
+                { "key": "email",     "type": "string",   "required": true,  "array": false, "size": 255, "xdefault": null, "encrypt": false },
+                { "key": "role",      "type": "string",   "required": true,  "array": false, "size": 50,  "xdefault": null, "encrypt": false },
+                { "key": "createdAt", "type": "datetime", "required": false, "array": false, "xdefault": null }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "events",
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Events",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "title",       "type": "string",   "required": true, "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "description", "type": "string",   "required": true, "array": false, "size": 10000, "xdefault": null, "encrypt": false },
+                { "key": "imageUrl",    "type": "string",   "required": true, "array": false, "size": 255,   "xdefault": null, "encrypt": false },
+                { "key": "placeId",     "type": "string",   "required": true, "array": false, "size": 36,    "xdefault": null, "encrypt": false },
+                { "key": "date",        "type": "datetime", "required": true, "array": false, "xdefault": null },
+                { "key": "category",    "type": "string",   "required": true, "array": false, "size": 100,   "xdefault": null, "encrypt": false }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "reviews",
+            "$permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+            "databaseId": "dz_guide_db",
+            "name": "Reviews",
+            "enabled": true,
+            "documentSecurity": false,
+            "columns": [
+                { "key": "userId",    "type": "string",   "required": true,  "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "userName",  "type": "string",   "required": true,  "array": false, "size": 255,  "xdefault": null, "encrypt": false },
+                { "key": "placeId",   "type": "string",   "required": true,  "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "eventId",   "type": "string",   "required": false, "array": false, "size": 36,   "xdefault": null, "encrypt": false },
+                { "key": "comment",   "type": "string",   "required": true,  "array": false, "size": 5000, "xdefault": null, "encrypt": false },
+                { "key": "rating",    "type": "double",   "required": true,  "array": false, "min": 1, "max": 5, "xdefault": null },
+                { "key": "createdAt", "type": "datetime", "required": true,  "array": false, "xdefault": null }
+            ],
+            "indexes": []
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "bucket_places",
+            "name": "Places Images",
+            "$permissions": ["read(\"any\")", "create(\"label:admin\")", "update(\"label:admin\")", "delete(\"label:admin\")"],
+            "enabled": true
+        }
+    ]
+}

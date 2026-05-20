@@ -1,76 +1,141 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:appwrite/appwrite.dart';
+import '../../../core/services/appwrite_service.dart';
 import 'places_event.dart';
 import 'places_state.dart';
 
 class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
+  final AppwriteService _appwrite = AppwriteService();
+
   PlacesBloc() : super(PlacesInitial()) {
     on<LoadPlaces>((event, emit) async {
       emit(PlacesLoading());
       try {
-        // Simulating Appwrite fetch
-        await Future.delayed(const Duration(milliseconds: 800));
-        final mockPlaces = [
-          {
-            'id': '1',
-            'title': 'Casbah of Algiers',
-            'category': 'Historical',
-            'rating': 4.8,
-            'status': 'Live',
-            'location': 'Algiers',
-            'image': 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=100&q=80',
-          },
-          {
-            'id': '2',
-            'title': 'Tassili n\'Ajjer',
-            'category': 'Nature',
-            'rating': 4.9,
-            'status': 'Live',
-            'location': 'Illizi',
-            'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=100&q=80',
-          },
-          {
-            'id': '3',
-            'title': 'Santa Cruz Fort',
-            'category': 'Historical',
-            'rating': 4.7,
-            'status': 'Hidden',
-            'location': 'Oran',
-            'image': 'https://images.unsplash.com/photo-1565552607561-75294aa52bb5?auto=format&fit=crop&w=100&q=80',
-          },
-          {
-            'id': '4',
-            'title': 'Constantine Bridges',
-            'category': 'Nature',
-            'rating': 4.6,
-            'status': 'Live',
-            'location': 'Constantine',
-            'image': 'https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&w=100&q=80',
-          },
-        ];
-        emit(PlacesLoaded(mockPlaces));
-      } catch (e) {
-        emit(PlacesError('Failed to load places'));
-      }
-    });
+        final response = await _appwrite.databases.listDocuments(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          queries: [Query.orderDesc('\$createdAt')],
+        );
 
-    on<UpdatePlaceStatus>((event, emit) {
-      if (state is PlacesLoaded) {
-        final currentPlaces = (state as PlacesLoaded).places;
-        final updatedPlaces = currentPlaces.map((p) {
-          if (p['id'] == event.id) {
-            return {...p, 'status': event.isLive ? 'Live' : 'Hidden'};
+        final List<Map<String, dynamic>> places = response.documents.map((doc) {
+          // Parse categories - could be stored as JSON string or list
+          List<String> categories = [];
+          try {
+            if (doc.data['categories'] is List) {
+              categories = List<String>.from(doc.data['categories']);
+            } else if (doc.data['categories'] is String) {
+              categories = (doc.data['categories'] as String)
+                  .split(',')
+                  .map((c) => c.trim())
+                  .toList();
+            }
+          } catch (_) {
+            categories = ['General'];
           }
-          return p;
+
+          return {
+            'id': doc.$id,
+            'name': doc.data['name'],
+            'description': doc.data['description'],
+            'imageUrl': doc.data['imageUrl'],
+            'categories': categories,
+            'lat': doc.data['lat'],
+            'lng': doc.data['lng'],
+            'rating': doc.data['rating'] ?? 0.0,
+            'reviewsCount': doc.data['reviewsCount'] ?? 0,
+            'favoritesCount': doc.data['favoritesCount'] ?? 0,
+            'isLive': doc.data['isLive'] ?? false,
+          };
         }).toList();
-        emit(PlacesLoaded(updatedPlaces));
+
+        emit(PlacesLoaded(places));
+      } catch (e) {
+        emit(PlacesError('Failed to load places: ${e.toString()}'));
       }
     });
 
-    on<DeletePlace>((event, emit) {
-      if (state is PlacesLoaded) {
-        final currentPlaces = (state as PlacesLoaded).places;
-        final updatedPlaces = currentPlaces.where((p) => p['id'] != event.id).toList();
-        emit(PlacesLoaded(updatedPlaces));
+    on<AddPlace>((event, emit) async {
+      try {
+        final placeData = {
+          'name': event.place['name'] ?? '',
+          'description': event.place['description'] ?? '',
+          'imageUrl': event.place['imageUrl'] ?? '',
+          'categories': event.place['categories'] is String
+              ? event.place['categories']
+              : (event.place['categories'] as List?)?.join(',') ?? 'General',
+          'lat': event.place['lat'] ?? 0.0,
+          'lng': event.place['lng'] ?? 0.0,
+          'rating': event.place['rating'] ?? 0.0,
+          'reviewsCount': event.place['reviewsCount'] ?? 0,
+          'favoritesCount': event.place['favoritesCount'] ?? 0,
+          'isLive': event.place['isLive'] ?? false,
+        };
+
+        await _appwrite.databases.createDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          documentId: ID.unique(),
+          data: placeData,
+        );
+        add(LoadPlaces());
+      } catch (e) {
+        emit(PlacesError('Failed to add place: ${e.toString()}'));
+      }
+    });
+
+    on<UpdatePlace>((event, emit) async {
+      try {
+        final placeData = {
+          'name': event.place['name'] ?? '',
+          'description': event.place['description'] ?? '',
+          'imageUrl': event.place['imageUrl'] ?? '',
+          'categories': event.place['categories'] is String
+              ? event.place['categories']
+              : (event.place['categories'] as List?)?.join(',') ?? 'General',
+          'lat': event.place['lat'] ?? 0.0,
+          'lng': event.place['lng'] ?? 0.0,
+          'rating': event.place['rating'] ?? 0.0,
+          'reviewsCount': event.place['reviewsCount'] ?? 0,
+          'favoritesCount': event.place['favoritesCount'] ?? 0,
+          'isLive': event.place['isLive'] ?? false,
+        };
+
+        await _appwrite.databases.updateDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          documentId: event.id,
+          data: placeData,
+        );
+        add(LoadPlaces());
+      } catch (e) {
+        emit(PlacesError('Failed to update place: ${e.toString()}'));
+      }
+    });
+
+    on<UpdatePlaceStatus>((event, emit) async {
+      try {
+        await _appwrite.databases.updateDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          documentId: event.id,
+          data: {'isLive': event.isLive},
+        );
+        add(LoadPlaces());
+      } catch (e) {
+        emit(PlacesError('Failed to update status: ${e.toString()}'));
+      }
+    });
+
+    on<DeletePlace>((event, emit) async {
+      try {
+        await _appwrite.databases.deleteDocument(
+          databaseId: AppwriteService.databaseId,
+          collectionId: AppwriteService.placesCollection,
+          documentId: event.id,
+        );
+        add(LoadPlaces());
+      } catch (e) {
+        emit(PlacesError('Failed to delete place: ${e.toString()}'));
       }
     });
   }
