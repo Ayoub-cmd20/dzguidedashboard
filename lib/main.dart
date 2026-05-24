@@ -16,6 +16,10 @@ import 'logic/blocs/users/users_bloc.dart';
 import 'logic/blocs/users/users_event.dart';
 import 'logic/blocs/rewards/rewards_bloc.dart';
 import 'logic/blocs/rewards/rewards_event.dart';
+import 'logic/blocs/events/events_bloc.dart';
+import 'logic/blocs/events/events_event.dart';
+import 'logic/blocs/settings/settings_bloc.dart';
+import 'logic/blocs/settings/settings_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,24 +51,37 @@ class DZGuideAdminApp extends StatelessWidget {
         BlocProvider(
           create: (context) => RewardsBloc()..add(LoadRewards()),
         ),
-      ],
-      child: MaterialApp(
-        title: 'DZ Guide Admin Dashboard',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is Authenticated) {
-              return const MainLayout();
-            } else if (state is AuthLoading) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            } else {
-              return const LoginScreen();
-            }
-          },
+        BlocProvider(
+          create: (context) => EventsBloc()..add(LoadEvents()),
         ),
+        BlocProvider(
+          create: (context) => SettingsBloc(),
+        ),
+      ],
+      child: BlocBuilder<SettingsBloc, SettingsState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'DZ Guide Admin Dashboard',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: state.themeMode,
+            locale: state.locale,
+            home: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is Authenticated) {
+                  return const MainLayout();
+                } else if (state is AuthLoading) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                } else {
+                  return const LoginScreen();
+                }
+              },
+            ),
+          );
+        },
       ),
     );
   }
