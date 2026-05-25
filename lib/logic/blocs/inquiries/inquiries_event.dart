@@ -7,3 +7,8 @@ class UpdateInquiryStatus extends InquiriesEvent {
   final String status;
   UpdateInquiryStatus(this.id, this.status);
 }
+
+class DeleteInquiry extends InquiriesEvent {
+  final String id;
+  DeleteInquiry(this.id);
+}

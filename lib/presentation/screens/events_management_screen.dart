@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/appwrite_service.dart';
 import '../../logic/blocs/events/events_bloc.dart';
@@ -188,9 +189,9 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
   }
 
   TableRow _buildTableRow(BuildContext context, Map<String, dynamic> event) {
-    final dateStr = event['date'] is String
+    final dateStr = event['date'] is String && event['date'].toString().length >= 10
         ? event['date'].substring(0, 10) // Extract date part from ISO string
-        : event['date'];
+        : event['date'].toString();
 
     return TableRow(
       children: [
@@ -281,14 +282,11 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
     final descriptionController = TextEditingController(
       text: event?['description'],
     );
-    DateTime? selectedDate;
-    if (event?['date'] != null && event!['date'].isNotEmpty) {
-      try {
-        selectedDate = DateTime.parse(event!['date']);
-      } catch (e) {
-        selectedDate = null;
-      }
-    }
+    
+    DateTime selectedDate = event?['date'] != null
+        ? DateTime.parse(event!['date'])
+        : DateTime.now();
+
     String selectedCategory = event?['category'] ?? 'Culture';
     String selectedPlaceId = event?['placeId'] ?? '';
 
@@ -318,9 +316,7 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
                     setState(() => selectedPlaceId = placeId);
                   }),
                   const SizedBox(height: 16),
-                  _buildDatePickerButton(context, setState, selectedDate, (
-                    date,
-                  ) {
+                  _buildDatePickerButton(context, setState, selectedDate, (date) {
                     setState(() => selectedDate = date);
                   }),
                   const SizedBox(height: 16),
@@ -392,7 +388,7 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
                         'title': titleController.text,
                         'description': descriptionController.text,
                         'placeId': selectedPlaceId,
-                        'date': selectedDate?.toIso8601String() ?? '',
+                        'date': selectedDate.toIso8601String(),
                         'category': selectedCategory,
                         'imageUrl': _formImageUrl ?? '',
                       };
@@ -622,68 +618,54 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
   Widget _buildDatePickerButton(
     BuildContext context,
     StateSetter setState,
-    DateTime? selectedDate,
+    DateTime selectedDate,
     Function(DateTime) onDateChanged,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Event Date', style: Theme.of(context).textTheme.labelMedium),
+        Text('Event Date & Time', style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(height: 8),
-        InkWell(
-          onTap: () async {
-            final DateTime? picked = await showDatePicker(
+        OutlinedButton.icon(
+          onPressed: () async {
+            final DateTime? pickedDate = await showDatePicker(
               context: context,
-              initialDate: selectedDate ?? DateTime.now(),
-              firstDate: DateTime.now(),
+              initialDate: selectedDate,
+              firstDate: DateTime.now().subtract(const Duration(days: 365)),
               lastDate: DateTime(2100),
             );
 
-            if (picked != null) {
+            if (pickedDate != null) {
               final TimeOfDay? pickedTime = await showTimePicker(
                 context: context,
-                initialTime: TimeOfDay.fromDateTime(
-                  selectedDate ?? DateTime.now(),
-                ),
+                initialTime: TimeOfDay.fromDateTime(selectedDate),
               );
 
               if (pickedTime != null) {
                 final DateTime finalDateTime = DateTime(
-                  picked.year,
-                  picked.month,
-                  picked.day,
+                  pickedDate.year,
+                  pickedDate.month,
+                  pickedDate.day,
                   pickedTime.hour,
                   pickedTime.minute,
                 );
                 onDateChanged(finalDateTime);
               } else {
-                onDateChanged(picked);
+                onDateChanged(pickedDate);
               }
             }
           },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey.shade50,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  selectedDate != null
-                      ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year} ${selectedDate.hour.toString().padLeft(2, '0')}:${selectedDate.minute.toString().padLeft(2, '0')}'
-                      : 'Select date and time',
-                  style: TextStyle(
-                    color: selectedDate != null ? Colors.black87 : Colors.grey,
-                    fontSize: 16,
-                  ),
-                ),
-                const Icon(LucideIcons.calendar, color: AppColors.dzGreen),
-              ],
-            ),
+          icon: const Icon(LucideIcons.calendar, size: 18),
+          label: Text(
+            DateFormat('MMM dd, yyyy - HH:mm').format(selectedDate),
+            style: const TextStyle(fontSize: 16),
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            side: BorderSide(color: Colors.grey.shade300),
+            alignment: Alignment.centerLeft,
+            foregroundColor: AppColors.textPrimary,
           ),
         ),
       ],

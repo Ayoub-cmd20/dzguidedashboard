@@ -12,7 +12,19 @@ class VenueInquiriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<InquiriesBloc, InquiriesState>(
+    return BlocConsumer<InquiriesBloc, InquiriesState>(
+      listener: (context, state) {
+        if (state is InquiriesError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.algerianRed,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         return Padding(
           padding: const EdgeInsets.all(32),
@@ -53,6 +65,11 @@ class VenueInquiriesScreen extends StatelessWidget {
     if (state is InquiriesLoading) {
       return const LoadingShimmer(width: double.infinity, height: 600, borderRadius: 25);
     } else if (state is InquiriesLoaded) {
+      if (state.inquiries.isEmpty) {
+        return const Center(
+          child: Text('No inquiries found.'),
+        );
+      }
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -74,9 +91,9 @@ class VenueInquiriesScreen extends StatelessWidget {
                   0: FlexColumnWidth(2),
                   1: FlexColumnWidth(1.5),
                   2: FlexColumnWidth(1.5),
-                  3: FlexColumnWidth(1.5),
+                  3: FlexColumnWidth(1),
                   4: FlexColumnWidth(1),
-                  5: FlexColumnWidth(1),
+                  5: FlexColumnWidth(1.5),
                 },
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
@@ -89,7 +106,21 @@ class VenueInquiriesScreen extends StatelessWidget {
         ),
       );
     } else if (state is InquiriesError) {
-      return Center(child: Text(state.message));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(LucideIcons.alertCircle, color: AppColors.algerianRed, size: 48),
+            const SizedBox(height: 16),
+            Text(state.message, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.read<InquiriesBloc>().add(LoadInquiries()),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
     }
     return const SizedBox.shrink();
   }
@@ -102,7 +133,7 @@ class VenueInquiriesScreen extends StatelessWidget {
         'Event Date',
         'Capacity',
         'Status',
-        'Action',
+        'Actions',
       ]
           .map((text) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
@@ -116,7 +147,15 @@ class VenueInquiriesScreen extends StatelessWidget {
   }
 
   TableRow _buildTableRow(BuildContext context, Map<String, dynamic> inquiry) {
-    bool isConfirmed = inquiry['status'] == 'Confirmed';
+    final status = inquiry['status'].toString().toLowerCase();
+    final isConfirmed = status == 'confirmed';
+    final isPending = status == 'pending';
+    final isDeclined = status == 'declined' || status == 'rejected';
+
+    Color statusColor = AppColors.elitePurple;
+    if (isConfirmed) statusColor = AppColors.dzGreen;
+    if (isDeclined) statusColor = AppColors.algerianRed;
+
     return TableRow(
       children: [
         Padding(
@@ -146,14 +185,14 @@ class VenueInquiriesScreen extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: (isConfirmed ? AppColors.dzGreen : AppColors.elitePurple).withValues(alpha: 0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              inquiry['status'],
+              inquiry['status'][0].toUpperCase() + inquiry['status'].substring(1),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isConfirmed ? AppColors.dzGreen : AppColors.elitePurple,
+                color: statusColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -162,19 +201,90 @@ class VenueInquiriesScreen extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: IconButton(
-            icon: const Icon(LucideIcons.eye, size: 20, color: AppColors.dzGreen),
-            onPressed: () => _showInquiryDetails(context, inquiry),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(LucideIcons.eye, size: 20, color: AppColors.textSecondary),
+                onPressed: () => _showInquiryDetails(context, inquiry),
+                tooltip: 'View Details',
+              ),
+              if (isPending) ...[
+                IconButton(
+                  icon: const Icon(LucideIcons.checkCircle, size: 20, color: AppColors.dzGreen),
+                  onPressed: () => _showConfirmationDialog(context, inquiry, 'confirmed'),
+                  tooltip: 'Confirm',
+                ),
+                IconButton(
+                  icon: const Icon(LucideIcons.xCircle, size: 20, color: AppColors.algerianRed),
+                  onPressed: () => _showConfirmationDialog(context, inquiry, 'declined'),
+                  tooltip: 'Decline',
+                ),
+              ],
+              IconButton(
+                icon: const Icon(LucideIcons.trash2, size: 20, color: AppColors.algerianRed),
+                onPressed: () => _showDeleteDialog(context, inquiry),
+                tooltip: 'Delete',
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  void _showInquiryDetails(BuildContext context, Map<String, dynamic> inquiry) {
+  void _showConfirmationDialog(BuildContext context, Map<String, dynamic> inquiry, String newStatus) {
+    final bool isConfirming = newStatus == 'confirmed';
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
+        title: Text(isConfirming ? 'Confirm Booking' : 'Decline Inquiry'),
+        content: Text('Are you sure you want to ${isConfirming ? 'confirm' : 'decline'} this booking for "${inquiry['venue']}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<InquiriesBloc>().add(UpdateInquiryStatus(inquiry['id'], newStatus));
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isConfirming ? AppColors.dzGreen : AppColors.algerianRed,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isConfirming ? 'Confirm' : 'Decline'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, Map<String, dynamic> inquiry) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Inquiry'),
+        content: Text('Are you sure you want to delete the inquiry from "${inquiry['inquirer']}"? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<InquiriesBloc>().add(DeleteInquiry(inquiry['id']));
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.algerianRed, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInquiryDetails(BuildContext context, Map<String, dynamic> inquiry) {
+    final status = inquiry['status'].toString().toLowerCase();
+    final isPending = status == 'pending';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: const Row(
           children: [
@@ -197,27 +307,36 @@ class VenueInquiriesScreen extends StatelessWidget {
               const Text('Requirements:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(inquiry['requirements']),
+                child: Text(inquiry['requirements'] ?? 'No special requirements specified.'),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-          if (inquiry['status'] == 'Pending')
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          if (isPending) ...[
+            TextButton(
+              onPressed: () {
+                context.read<InquiriesBloc>().add(UpdateInquiryStatus(inquiry['id'], 'declined'));
+                Navigator.pop(ctx);
+              },
+              child: const Text('Decline', style: TextStyle(color: AppColors.algerianRed)),
+            ),
             ElevatedButton(
               onPressed: () {
-                context.read<InquiriesBloc>().add(UpdateInquiryStatus(inquiry['id'], 'Confirmed'));
-                Navigator.pop(context);
+                context.read<InquiriesBloc>().add(UpdateInquiryStatus(inquiry['id'], 'confirmed'));
+                Navigator.pop(ctx);
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.dzGreen, foregroundColor: Colors.white),
               child: const Text('Confirm Booking'),
             ),
+          ],
         ],
       ),
     );
@@ -227,9 +346,10 @@ class VenueInquiriesScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
+          Expanded(child: Text(value)),
         ],
       ),
     );

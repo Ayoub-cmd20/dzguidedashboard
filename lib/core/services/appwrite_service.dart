@@ -137,12 +137,14 @@ class AppwriteService {
         final statusFormatted = status[0].toUpperCase() + status.substring(1);
 
         inquiries.add({
+          'id': doc.$id, // Added ID
           'venue': placeName,
           'inquirer': doc.data['userId'],
           'date': doc.data['eventDate'],
           'capacity': '${doc.data['guestCount']} Guests',
           'status': statusFormatted,
-          'placeId': doc.data['placeId'], // Include placeId for navigation
+          'requirements': doc.data['requirements'] ?? 'No special requirements specified.', // Added requirements
+          'placeId': doc.data['placeId'],
         });
       }
 
@@ -182,7 +184,6 @@ class AppwriteService {
   }
 
   // Get analytics data for the traveler metrics chart
-  // Tries to fetch from pre-aggregated analytics table, falls back to computing from raw data
   Future<List<Map<String, dynamic>>> getAnalyticsData({int? year}) async {
     try {
       final currentYear = year ?? DateTime.now().year;
@@ -211,16 +212,13 @@ class AppwriteService {
       }
 
       // If analytics table is empty, try to compute from raw data
-      // This provides real data aggregation instead of just mock data
       return await _computeAnalyticsFromRawData(currentYear);
     } catch (e) {
-      // Return empty collection message if there's an error
       return _generateEmptyCollectionMessage();
     }
   }
 
   // Compute analytics by aggregating from inquiries and users tables
-  // This provides actual data instead of mocked values
   Future<List<Map<String, dynamic>>> _computeAnalyticsFromRawData(
     int year,
   ) async {
@@ -245,7 +243,7 @@ class AppwriteService {
       final allInquiries = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: inquiriesCollection,
-        queries: [Query.limit(10000)], // Adjust limit as needed
+        queries: [Query.limit(10000)],
       );
 
       // Get total unique users
@@ -260,7 +258,6 @@ class AppwriteService {
       for (int monthIndex = 0; monthIndex < 12; monthIndex++) {
         int monthNumber = monthIndex + 1;
 
-        // Count inquiries for this month
         int luxuryBookings = 0;
         int newInquiries = 0;
 
@@ -269,16 +266,12 @@ class AppwriteService {
             final eventDate = DateTime.parse(inquiry.data['eventDate']);
             if (eventDate.year == year && eventDate.month == monthNumber) {
               newInquiries++;
-              // Classify as luxury booking (can add logic for categorization)
               luxuryBookings++;
             }
-          } catch (e) {
-            // Skip invalid dates
-          }
+          } catch (e) {}
         }
 
-        // Elite activity is a subset of luxury bookings (e.g., confirmed bookings)
-        int eliteActivity = (luxuryBookings * 0.4).toInt(); // 40% of bookings
+        int eliteActivity = (luxuryBookings * 0.4).toInt();
 
         analyticsData.add({
           'month': months[monthIndex],
@@ -292,12 +285,10 @@ class AppwriteService {
 
       return analyticsData;
     } catch (e) {
-      // Fall back to empty collection message if aggregation fails
       return _generateEmptyCollectionMessage();
     }
   }
 
-  // Generate empty collection message when no analytics data is available
   List<Map<String, dynamic>> _generateEmptyCollectionMessage() {
     return [
       {
@@ -323,7 +314,6 @@ class AppwriteService {
     required int newInquiries,
   }) async {
     try {
-      // Check if record exists
       final existing = await databases.listDocuments(
         databaseId: databaseId,
         collectionId: analyticsCollection,
@@ -338,7 +328,6 @@ class AppwriteService {
       };
 
       if (existing.documents.isNotEmpty) {
-        // Update existing record
         await databases.updateDocument(
           databaseId: databaseId,
           collectionId: analyticsCollection,
@@ -346,7 +335,6 @@ class AppwriteService {
           data: data,
         );
       } else {
-        // Create new record
         await databases.createDocument(
           databaseId: databaseId,
           collectionId: analyticsCollection,
