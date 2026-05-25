@@ -7,6 +7,7 @@ import 'venue_inquiries_screen.dart';
 import 'user_management_screen.dart';
 import 'rewards_management_screen.dart';
 import 'events_management_screen.dart';
+import 'analytics_management_screen.dart';
 import 'settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
@@ -26,6 +27,7 @@ class _MainLayoutState extends State<MainLayout> {
     'Events',
     'User Management',
     'Rewards / Elite',
+    'Analytics',
     'Settings',
   ];
 
@@ -47,7 +49,7 @@ class _MainLayoutState extends State<MainLayout> {
               children: [
                 GlobalHeader(
                   title: _titles[_selectedIndex],
-                  onSettingsTap: () => setState(() => _selectedIndex = 6),
+                  onSettingsTap: () => setState(() => _selectedIndex = 7),
                 ),
                 Expanded(
                   child: IndexedStack(
@@ -61,6 +63,7 @@ class _MainLayoutState extends State<MainLayout> {
                       const EventsManagementScreen(),
                       const UserManagementScreen(),
                       const RewardsManagementScreen(),
+                      const AnalyticsManagementScreen(),
                       const SettingsScreen(),
                     ],
                   ),

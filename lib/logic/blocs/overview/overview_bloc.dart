@@ -12,117 +12,133 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
     on<LoadOverviewData>((event, emit) async {
       emit(OverviewLoading());
       try {
-        // Fetch all stats in parallel
-        final results = await Future.wait([
-          // Total Places
-          _appwrite.databases.listDocuments(
-            databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.placesCollection,
-            queries: [Query.limit(1)],
+        // Use optimized single method call
+        final overviewData = await _appwrite.getOverviewData();
+
+        // Check if analytics data indicates empty collection
+        final analyticsData =
+            overviewData['analyticsData'] as List<Map<String, dynamic>>;
+        final bool hasEmptyAnalytics =
+            analyticsData.isNotEmpty &&
+            analyticsData.first['month'] == 'No Data' &&
+            analyticsData.first['message'] != null;
+
+        // Format dates for display
+        final formattedInquiries = (overviewData['recentInquiries'] as List)
+            .map((inquiry) {
+              final dateStr = (inquiry['date'] ?? '') as String;
+              String formattedDate = dateStr;
+              try {
+                if (dateStr.isNotEmpty) {
+                  formattedDate = DateFormat(
+                    'MMM dd, yyyy',
+                  ).format(DateTime.parse(dateStr));
+                }
+              } catch (e) {
+                // Keep original format if parsing fails
+              }
+
+              return {
+                ...inquiry as Map<String, dynamic>,
+                'date': formattedDate,
+              };
+            })
+            .toList();
+
+        emit(
+          OverviewLoaded(
+            stats: overviewData['stats'],
+            recentInquiries: formattedInquiries,
+            analyticsData: analyticsData,
+            hasEmptyAnalytics: hasEmptyAnalytics,
           ),
-          // Pending Inquiries
-          _appwrite.databases.listDocuments(
-            databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.inquiriesCollection,
-            queries: [Query.equal('status', 'pending'), Query.limit(1)],
-          ),
-          // Total Users
-          _appwrite.databases.listDocuments(
-            databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.usersCollection,
-            queries: [Query.limit(1)],
-          ),
-          // Recent Inquiries (Detailed list)
-          _appwrite.databases.listDocuments(
-            databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.inquiriesCollection,
-            queries: [Query.orderDesc('\$createdAt'), Query.limit(5)],
-          ),
-          // Total Rewards
-          _appwrite.databases.listDocuments(
-            databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.rewardsCollection,
-            queries: [Query.limit(1)],
-          ),
-        ]);
-
-        final totalPlaces = (results[0]).total;
-        final pendingInquiriesCount = (results[1]).total;
-        final totalUsers = (results[2]).total;
-        final recentInquiriesDocs = (results[3]).documents;
-        final totalRewards = (results[4]).total;
-
-        // Build Stats List from real data
-        final stats = [
-          {
-            'title': 'Active Destinations',
-            'value': totalPlaces.toString(),
-            'trend': 'Live',
-            'icon': 'mapPin'
-          },
-          {
-            'title': 'Pending Inquiries',
-            'value': pendingInquiriesCount.toString(),
-            'trend': 'Action Required',
-            'icon': 'clock'
-          },
-          {
-            'title': 'Global Travelers',
-            'value': totalUsers.toString(),
-            'trend': 'Active Users',
-            'icon': 'users'
-          },
-          {
-            'title': 'Available Rewards',
-            'value': totalRewards.toString(),
-            'trend': 'In Catalog',
-            'icon': 'gift'
-          },
-        ];
-
-        // Resolve Venue Names for Recent Inquiries
-        final List<Map<String, dynamic>> inquiries = [];
-        for (var doc in recentInquiriesDocs) {
-          String placeName = 'Unknown Place';
-          try {
-            final place = await _appwrite.databases.getDocument(
-              databaseId: AppwriteService.databaseId,
-              collectionId: AppwriteService.placesCollection,
-              documentId: doc.data['placeId'],
-            );
-            placeName = place.data['name'];
-          } catch (_) {
-            // placeName remains 'Unknown Place'
-          }
-
-          final status = (doc.data['status'] ?? 'pending').toString();
-          final statusFormatted = status[0].toUpperCase() + status.substring(1);
-
-          inquiries.add({
-            'venue': placeName,
-            'inquirer': doc.data['userId'],
-            'date': DateFormat('MMM dd, yyyy').format(DateTime.parse(doc.data['eventDate'])),
-            'capacity': '${doc.data['guestCount']} Guests',
-            'status': statusFormatted,
-          });
-        }
-
-        emit(OverviewLoaded(stats: stats, recentInquiries: inquiries));
+        );
       } catch (e) {
-        if (e is AppwriteException && (e.code == 401 || e.code == 404)) {
+        // Check for AppwriteException with string error codes
+        if (e is AppwriteException &&
+            (e.code == '401' || e.code == '404' || e.code == 'unauthorized')) {
           // Provide Mock Data for unauthorized/offline development
           final stats = [
-            {'title': 'Active Destinations', 'value': '42', 'trend': '+5 new', 'icon': 'mapPin'},
-            {'title': 'Pending Inquiries', 'value': '12', 'trend': 'Action Needed', 'icon': 'clock'},
-            {'title': 'Global Travelers', 'value': '1,284', 'trend': '+12%', 'icon': 'users'},
-            {'title': 'Available Rewards', 'value': '15', 'trend': 'Active', 'icon': 'gift'},
+            {
+              'title': 'Active Destinations',
+              'value': '42',
+              'trend': '+5 new',
+              'icon': 'mapPin',
+            },
+            {
+              'title': 'Pending Inquiries',
+              'value': '12',
+              'trend': 'Action Needed',
+              'icon': 'clock',
+            },
+            {
+              'title': 'Global Travelers',
+              'value': '1,284',
+              'trend': '+12%',
+              'icon': 'users',
+            },
+            {
+              'title': 'Available Rewards',
+              'value': '15',
+              'trend': 'Active',
+              'icon': 'gift',
+            },
           ];
           final inquiries = [
-            {'venue': 'Royal Saharan Suite', 'inquirer': 'John Doe', 'date': 'May 20, 2024', 'capacity': '4 Guests', 'status': 'Pending'},
-            {'venue': 'Casbah Heritage Tour', 'inquirer': 'Sarah Smith', 'date': 'May 22, 2024', 'capacity': '2 Guests', 'status': 'Confirmed'},
-            {'venue': 'Oran Coastal Resort', 'inquirer': 'Ahmed K.', 'date': 'June 05, 2024', 'capacity': '5 Guests', 'status': 'Pending'},
+            {
+              'venue': 'Royal Saharan Suite',
+              'inquirer': 'John Doe',
+              'date': 'May 20, 2024',
+              'capacity': '4 Guests',
+              'status': 'Pending',
+            },
+            {
+              'venue': 'Casbah Heritage Tour',
+              'inquirer': 'Sarah Smith',
+              'date': 'May 22, 2024',
+              'capacity': '2 Guests',
+              'status': 'Confirmed',
+            },
+            {
+              'venue': 'Oran Coastal Resort',
+              'inquirer': 'Ahmed K.',
+              'date': 'June 05, 2024',
+              'capacity': '5 Guests',
+              'status': 'Pending',
+            },
           ];
-          emit(OverviewLoaded(stats: stats, recentInquiries: inquiries));
+          // Generate mock analytics data for the error case
+          final List<Map<String, dynamic>> mockAnalytics = [];
+          final months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ];
+          for (int i = 0; i < 12; i++) {
+            mockAnalytics.add({
+              'month': months[i],
+              'year': DateTime.now().year,
+              'luxuryBookings': 45 + (i * 5) + (i % 3 * 10),
+              'eliteActivity': 20 + (i * 4) + (i % 2 * 8),
+            });
+          }
+
+          emit(
+            OverviewLoaded(
+              stats: stats,
+              recentInquiries: inquiries,
+              analyticsData: mockAnalytics,
+            ),
+          );
         } else {
           emit(OverviewError('Failed to load dashboard: ${e.toString()}'));
         }

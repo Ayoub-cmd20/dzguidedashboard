@@ -9,6 +9,8 @@ import '../../core/services/appwrite_service.dart';
 import '../../logic/blocs/events/events_bloc.dart';
 import '../../logic/blocs/events/events_event.dart';
 import '../../logic/blocs/events/events_state.dart';
+import '../../logic/blocs/places/places_bloc.dart';
+import '../../logic/blocs/places/places_state.dart';
 import '../widgets/loading_shimmer.dart';
 
 class EventsManagementScreen extends StatefulWidget {
@@ -20,11 +22,11 @@ class EventsManagementScreen extends StatefulWidget {
 
 class _EventsManagementScreenState extends State<EventsManagementScreen> {
   String _searchQuery = '';
-  
+
   // For web file picker support
   Uint8List? _webFileBytes;
   String? _webFileName;
-  
+
   // For form state
   File? _formSelectedImage;
   String? _formImageUrl;
@@ -43,11 +45,19 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
             child: BlocBuilder<EventsBloc, EventsState>(
               builder: (context, state) {
                 if (state is EventsLoading) {
-                  return const LoadingShimmer(width: double.infinity, height: 600, borderRadius: 25);
+                  return const LoadingShimmer(
+                    width: double.infinity,
+                    height: 600,
+                    borderRadius: 25,
+                  );
                 } else if (state is EventsLoaded) {
-                  final filteredEvents = state.events.where((e) =>
-                    e['title'].toString().toLowerCase().contains(_searchQuery.toLowerCase())
-                  ).toList();
+                  final filteredEvents = state.events
+                      .where(
+                        (e) => e['title'].toString().toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        ),
+                      )
+                      .toList();
                   return _buildEventsList(context, filteredEvents);
                 } else if (state is EventsError) {
                   return Center(child: Text(state.message));
@@ -68,9 +78,14 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Events Management', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            Text('Manage cultural festivals and local events across Algeria', 
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+            const Text(
+              'Events Management',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Manage cultural festivals and local events across Algeria',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
           ],
         ),
         ElevatedButton.icon(
@@ -79,7 +94,9 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
             backgroundColor: AppColors.dzGreen,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           icon: const Icon(LucideIcons.plus, size: 20),
           label: const Text('Add New Event'),
@@ -88,12 +105,21 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
     );
   }
 
-  Widget _buildEventsList(BuildContext context, List<Map<String, dynamic>> events) {
+  Widget _buildEventsList(
+    BuildContext context,
+    List<Map<String, dynamic>> events,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: const [BoxShadow(color: AppColors.shadowColor, blurRadius: 20, offset: Offset(0, 10))],
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowColor,
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -106,7 +132,10 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
                 prefixIcon: const Icon(LucideIcons.search, size: 20),
                 filled: true,
                 fillColor: Theme.of(context).scaffoldBackgroundColor,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
@@ -137,51 +166,101 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
 
   TableRow _buildTableHeader() {
     return TableRow(
-      children: ['Image', 'Event Title', 'Location', 'Date', 'Status', 'Actions'].map((text) => 
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-        )
-      ).toList(),
+      children:
+          ['Image', 'Event Title', 'Date', 'Category', 'Place ID', 'Actions']
+              .map(
+                (text) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 8,
+                  ),
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
     );
   }
 
   TableRow _buildTableRow(BuildContext context, Map<String, dynamic> event) {
+    final dateStr = event['date'] is String
+        ? event['date'].substring(0, 10) // Extract date part from ISO string
+        : event['date'];
+
     return TableRow(
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(event['imageUrl'], width: 50, height: 50, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(width: 50, height: 50, color: Colors.grey.shade100, child: const Icon(LucideIcons.image, size: 20)),
+            child: Image.network(
+              event['imageUrl'],
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 50,
+                height: 50,
+                color: Colors.grey.shade100,
+                child: const Icon(LucideIcons.image, size: 20),
+              ),
             ),
           ),
         ),
-        Padding(padding: const EdgeInsets.all(8.0), child: Text(event['title'], style: const TextStyle(fontWeight: FontWeight.w600))),
-        Padding(padding: const EdgeInsets.all(8.0), child: Text(event['location'])),
-        Padding(padding: const EdgeInsets.all(8.0), child: Text(event['date'])),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            event['title'],
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Padding(padding: const EdgeInsets.all(8.0), child: Text(dateStr)),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: (event['status'] == 'Upcoming' ? AppColors.dzGreen : Colors.grey).withValues(alpha: 0.1),
+              color: AppColors.dzGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(event['status'], style: TextStyle(color: event['status'] == 'Upcoming' ? AppColors.dzGreen : Colors.grey, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            child: Text(
+              event['category'],
+              style: const TextStyle(
+                color: AppColors.dzGreen,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(event['placeId'], style: const TextStyle(fontSize: 12)),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(LucideIcons.edit3, size: 18, color: AppColors.dzGreen),
+                icon: const Icon(
+                  LucideIcons.edit3,
+                  size: 18,
+                  color: AppColors.dzGreen,
+                ),
                 onPressed: () => _showEventForm(context, event: event),
               ),
               IconButton(
-                icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.algerianRed),
+                icon: const Icon(
+                  LucideIcons.trash2,
+                  size: 18,
+                  color: AppColors.algerianRed,
+                ),
                 onPressed: () => _showDeleteConfirmation(context, event),
               ),
             ],
@@ -197,18 +276,29 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
     _formIsUploading = false;
     _webFileBytes = null;
     _webFileName = null;
-    
+
     final titleController = TextEditingController(text: event?['title']);
-    final locationController = TextEditingController(text: event?['location']);
-    final dateController = TextEditingController(text: event?['date']);
-    String selectedCat = event?['category'] ?? 'Culture';
-    String selectedStatus = event?['status'] ?? 'Upcoming';
+    final descriptionController = TextEditingController(
+      text: event?['description'],
+    );
+    DateTime? selectedDate;
+    if (event?['date'] != null && event!['date'].isNotEmpty) {
+      try {
+        selectedDate = DateTime.parse(event!['date']);
+      } catch (e) {
+        selectedDate = null;
+      }
+    }
+    String selectedCategory = event?['category'] ?? 'Culture';
+    String selectedPlaceId = event?['placeId'] ?? '';
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(event == null ? 'Add New Event' : 'Edit Event'),
           content: SizedBox(
             width: 500,
@@ -218,34 +308,40 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
                 children: [
                   _buildTextField('Event Title', controller: titleController),
                   const SizedBox(height: 16),
-                  _buildTextField('Location (City, Region)', controller: locationController),
+                  _buildTextField(
+                    'Description',
+                    controller: descriptionController,
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField('Date (e.g. July 25, 2024)', controller: dateController),
+                  _buildPlacesDropdown(setState, selectedPlaceId, (placeId) {
+                    setState(() => selectedPlaceId = placeId);
+                  }),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          decoration: _inputDecoration('Category'),
-                          initialValue: selectedCat,
-                          items: ['Music', 'Sports', 'Culture', 'Festival', 'Other']
-                              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                              .toList(),
-                          onChanged: (v) => selectedCat = v!,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          decoration: _inputDecoration('Status'),
-                          initialValue: selectedStatus,
-                          items: ['Upcoming', 'Completed', 'Canceled']
-                              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                              .toList(),
-                          onChanged: (v) => selectedStatus = v!,
-                        ),
-                      ),
-                    ],
+                  _buildDatePickerButton(context, setState, selectedDate, (
+                    date,
+                  ) {
+                    setState(() => selectedDate = date);
+                  }),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: _inputDecoration('Category'),
+                    value: selectedCategory,
+                    items:
+                        [
+                              'Music',
+                              'Sports',
+                              'Culture',
+                              'Festival',
+                              'Food',
+                              'Art',
+                              'Other',
+                            ]
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                    onChanged: (v) => setState(() => selectedCategory = v!),
                   ),
                   const SizedBox(height: 16),
                   _buildImagePicker(context, event, setState),
@@ -254,45 +350,66 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
-              onPressed: _formIsUploading ? null : () async {
-                if (_webFileBytes != null || _formSelectedImage != null) {
-                  setState(() => _formIsUploading = true);
-                  try {
-                    final appwrite = AppwriteService();
-                    String fileId;
-                    if (_webFileBytes != null) {
-                      fileId = await appwrite.uploadImageBytes(_webFileBytes!, _webFileName ?? 'event.jpg');
-                    } else {
-                      fileId = await appwrite.uploadImage(_formSelectedImage!, 'event_${DateTime.now().millisecondsSinceEpoch}');
-                    }
-                    _formImageUrl = appwrite.getImageUrl(AppwriteService.placesBucket, fileId);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-                    setState(() => _formIsUploading = false);
-                    return;
-                  }
-                  setState(() => _formIsUploading = false);
-                }
+              onPressed: _formIsUploading
+                  ? null
+                  : () async {
+                      if (_webFileBytes != null || _formSelectedImage != null) {
+                        setState(() => _formIsUploading = true);
+                        try {
+                          final appwrite = AppwriteService();
+                          String fileId;
+                          if (_webFileBytes != null) {
+                            fileId = await appwrite.uploadImageBytes(
+                              _webFileBytes!,
+                              _webFileName ?? 'event.jpg',
+                            );
+                          } else {
+                            fileId = await appwrite.uploadImage(
+                              _formSelectedImage!,
+                              'event_${DateTime.now().millisecondsSinceEpoch}',
+                            );
+                          }
+                          _formImageUrl = appwrite.getImageUrl(
+                            AppwriteService.placesBucket,
+                            fileId,
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Upload failed: $e')),
+                          );
+                          setState(() => _formIsUploading = false);
+                          return;
+                        }
+                        setState(() => _formIsUploading = false);
+                      }
 
-                final eventData = {
-                  'title': titleController.text,
-                  'location': locationController.text,
-                  'date': dateController.text,
-                  'category': selectedCat,
-                  'status': selectedStatus,
-                  'imageUrl': _formImageUrl ?? '',
-                };
+                      final eventData = {
+                        'title': titleController.text,
+                        'description': descriptionController.text,
+                        'placeId': selectedPlaceId,
+                        'date': selectedDate?.toIso8601String() ?? '',
+                        'category': selectedCategory,
+                        'imageUrl': _formImageUrl ?? '',
+                      };
 
-                if (event != null) {
-                  context.read<EventsBloc>().add(UpdateEvent(event['id'], eventData));
-                } else {
-                  context.read<EventsBloc>().add(AddEvent(eventData));
-                }
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.dzGreen, foregroundColor: Colors.white),
+                      if (event != null) {
+                        context.read<EventsBloc>().add(
+                          UpdateEvent(event['id'], eventData),
+                        );
+                      } else {
+                        context.read<EventsBloc>().add(AddEvent(eventData));
+                      }
+                      Navigator.pop(ctx);
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.dzGreen,
+                foregroundColor: Colors.white,
+              ),
               child: Text(event == null ? 'Create' : 'Save Changes'),
             ),
           ],
@@ -301,29 +418,44 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, Map<String, dynamic> event) {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    Map<String, dynamic> event,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Event'),
         content: Text('Are you sure you want to delete "${event['title']}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               context.read<EventsBloc>().add(DeleteEvent(event['id']));
               Navigator.pop(ctx);
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.algerianRed)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.algerianRed),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(String label, {TextEditingController? controller}) {
+  Widget _buildTextField(
+    String label, {
+    TextEditingController? controller,
+    int maxLines = 1,
+  }) {
     return TextFormField(
       controller: controller,
+      maxLines: maxLines,
+      minLines: maxLines == 1 ? 1 : 3,
       decoration: _inputDecoration(label),
     );
   }
@@ -332,32 +464,44 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
     return InputDecoration(
       labelText: label,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
     );
   }
 
-  Widget _buildImagePicker(BuildContext context, Map<String, dynamic>? event, StateSetter setState) {
+  Widget _buildImagePicker(
+    BuildContext context,
+    Map<String, dynamic>? event,
+    StateSetter setState,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Event Image', style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: _formIsUploading ? null : () async {
-            final result = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
-            if (result != null) {
-              setState(() {
-                if (result.files.single.bytes != null) {
-                  _webFileBytes = result.files.single.bytes;
-                  _webFileName = result.files.single.name;
-                  _formSelectedImage = null;
-                } else {
-                  _formSelectedImage = File(result.files.single.path!);
-                  _webFileBytes = null;
-                }
-              });
-            }
-          },
+          onTap: _formIsUploading
+              ? null
+              : () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    type: FileType.image,
+                    allowMultiple: false,
+                  );
+                  if (result != null) {
+                    setState(() {
+                      if (result.files.single.bytes != null) {
+                        _webFileBytes = result.files.single.bytes;
+                        _webFileName = result.files.single.name;
+                        _formSelectedImage = null;
+                      } else {
+                        _formSelectedImage = File(result.files.single.path!);
+                        _webFileBytes = null;
+                      }
+                    });
+                  }
+                },
           child: Container(
             width: double.infinity,
             height: 120,
@@ -370,17 +514,174 @@ class _EventsManagementScreenState extends State<EventsManagementScreen> {
               children: [
                 Center(
                   child: _formSelectedImage != null
-                      ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_formSelectedImage!, width: double.infinity, height: double.infinity, fit: BoxFit.cover))
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            _formSelectedImage!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        )
                       : _webFileBytes != null
-                          ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.memory(_webFileBytes!, width: double.infinity, height: double.infinity, fit: BoxFit.cover))
-                          : _formImageUrl != null && _formImageUrl!.isNotEmpty
-                              ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(_formImageUrl!, width: double.infinity, height: double.infinity, fit: BoxFit.cover))
-                              : const Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Icon(LucideIcons.upload, color: Colors.grey), SizedBox(height: 4), Text('Click to upload image', style: TextStyle(color: Colors.grey, fontSize: 12))],
-                                ),
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.memory(
+                            _webFileBytes!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : _formImageUrl != null && _formImageUrl!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            _formImageUrl!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(LucideIcons.upload, color: Colors.grey),
+                            SizedBox(height: 4),
+                            Text(
+                              'Click to upload image',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
-                if (_formIsUploading) Container(color: Colors.black26, child: const Center(child: CircularProgressIndicator(color: Colors.white))),
+                if (_formIsUploading)
+                  Container(
+                    color: Colors.black26,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlacesDropdown(
+    StateSetter setState,
+    String selectedPlaceId,
+    Function(String) onChanged,
+  ) {
+    return BlocBuilder<PlacesBloc, PlacesState>(
+      builder: (context, state) {
+        if (state is PlacesLoading) {
+          return InputDecorator(
+            decoration: _inputDecoration('Select Place'),
+            child: const SizedBox(
+              height: 40,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+          );
+        } else if (state is PlacesLoaded) {
+          final places = state.places;
+          return DropdownButtonFormField<String>(
+            decoration: _inputDecoration('Select Place'),
+            value: selectedPlaceId.isNotEmpty ? selectedPlaceId : null,
+            items: places.map((place) {
+              return DropdownMenuItem<String>(
+                value: place['id'] as String,
+                child: Text(place['name'] as String),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  onChanged(value);
+                });
+              }
+            },
+            hint: const Text('Choose a place'),
+          );
+        } else if (state is PlacesError) {
+          return Text(
+            'Error loading places: ${state.message}',
+            style: const TextStyle(color: AppColors.algerianRed),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildDatePickerButton(
+    BuildContext context,
+    StateSetter setState,
+    DateTime? selectedDate,
+    Function(DateTime) onDateChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Event Date', style: Theme.of(context).textTheme.labelMedium),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate ?? DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime(2100),
+            );
+
+            if (picked != null) {
+              final TimeOfDay? pickedTime = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.fromDateTime(
+                  selectedDate ?? DateTime.now(),
+                ),
+              );
+
+              if (pickedTime != null) {
+                final DateTime finalDateTime = DateTime(
+                  picked.year,
+                  picked.month,
+                  picked.day,
+                  pickedTime.hour,
+                  pickedTime.minute,
+                );
+                onDateChanged(finalDateTime);
+              } else {
+                onDateChanged(picked);
+              }
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade50,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  selectedDate != null
+                      ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year} ${selectedDate.hour.toString().padLeft(2, '0')}:${selectedDate.minute.toString().padLeft(2, '0')}'
+                      : 'Select date and time',
+                  style: TextStyle(
+                    color: selectedDate != null ? Colors.black87 : Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+                const Icon(LucideIcons.calendar, color: AppColors.dzGreen),
               ],
             ),
           ),

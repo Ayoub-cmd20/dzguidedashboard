@@ -30,15 +30,19 @@ class Sidebar extends StatelessWidget {
                     color: AppColors.dzGreen,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(LucideIcons.map, color: Colors.white, size: 24),
+                  child: const Icon(
+                    LucideIcons.map,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'DZ Guide',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.dzGreen,
-                        fontSize: 24,
-                      ),
+                    color: AppColors.dzGreen,
+                    fontSize: 24,
+                  ),
                 ),
               ],
             ),
@@ -80,12 +84,18 @@ class Sidebar extends StatelessWidget {
             isSelected: selectedIndex == 5,
             onTap: () => onItemSelected(5),
           ),
+          _SidebarItem(
+            icon: LucideIcons.barChart3,
+            label: 'Analytics',
+            isSelected: selectedIndex == 6,
+            onTap: () => onItemSelected(6),
+          ),
           const Spacer(),
           _SidebarItem(
             icon: LucideIcons.settings,
             label: 'Settings',
-            isSelected: selectedIndex == 6,
-            onTap: () => onItemSelected(6),
+            isSelected: selectedIndex == 7,
+            onTap: () => onItemSelected(7),
           ),
         ],
       ),
@@ -116,7 +126,9 @@ class _SidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.dzGreen.withValues(alpha: 0.1) : Colors.transparent,
+            color: isSelected
+                ? AppColors.dzGreen.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -130,7 +142,9 @@ class _SidebarItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? AppColors.dzGreen : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.dzGreen
+                      : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),

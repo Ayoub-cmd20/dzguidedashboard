@@ -4,7 +4,6 @@ import '../../../core/services/appwrite_service.dart';
 import 'events_event.dart';
 import 'events_state.dart';
 
-
 class EventsBloc extends Bloc<EventsEvent, EventsState> {
   final AppwriteService _appwrite = AppwriteService();
 
@@ -14,19 +13,19 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
       try {
         final response = await _appwrite.databases.listDocuments(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'events', // Assuming collection name is 'events'
+          collectionId: AppwriteService.eventsCollection,
           queries: [Query.orderDesc('\$createdAt')],
         );
 
         final events = response.documents.map((doc) {
           return {
             'id': doc.$id,
-            'title': doc.data['title'],
-            'location': doc.data['location'],
-            'date': doc.data['date'],
-            'category': doc.data['category'],
-            'imageUrl': doc.data['imageUrl'],
-            'status': doc.data['status'] ?? 'Upcoming',
+            'title': doc.data['title'] ?? '',
+            'description': doc.data['description'] ?? '',
+            'placeId': doc.data['placeId'] ?? '',
+            'date': doc.data['date'] ?? '',
+            'category': doc.data['category'] ?? '',
+            'imageUrl': doc.data['imageUrl'] ?? '',
           };
         }).toList();
 
@@ -37,29 +36,35 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
             {
               'id': '1',
               'title': 'Timgad International Music Festival',
-              'location': 'Batna, Algeria',
-              'date': 'July 25, 2024',
+              'description':
+                  'A grand celebration of music and culture featuring international and local artists.',
+              'placeId': 'timgad',
+              'date': '2024-07-25T18:00:00Z',
               'category': 'Music',
-              'imageUrl': 'https://images.unsplash.com/photo-1514525253361-bee8718a747c?auto=format&fit=crop&w=800&q=80',
-              'status': 'Upcoming',
+              'imageUrl':
+                  'https://images.unsplash.com/photo-1514525253361-bee8718a747c?auto=format&fit=crop&w=800&q=80',
             },
             {
               'id': '2',
               'title': 'Sahara Desert Marathon',
-              'location': 'Tindouf, Algeria',
-              'date': 'February 28, 2024',
+              'description':
+                  'An extreme sports event in the heart of the Sahara desert with runners from around the world.',
+              'placeId': 'tindouf',
+              'date': '2024-02-28T06:00:00Z',
               'category': 'Sports',
-              'imageUrl': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
-              'status': 'Completed',
+              'imageUrl':
+                  'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
             },
             {
               'id': '3',
               'title': 'Algiers International Book Fair',
-              'location': 'SAFEX, Algiers',
-              'date': 'October 30, 2024',
+              'description':
+                  'A celebration of literature and publishing featuring authors, publishers, and book lovers.',
+              'placeId': 'safex',
+              'date': '2024-10-30T09:00:00Z',
               'category': 'Culture',
-              'imageUrl': 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=800&q=80',
-              'status': 'Upcoming',
+              'imageUrl':
+                  'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=800&q=80',
             },
           ];
           emit(EventsLoaded(mockEvents));
@@ -73,7 +78,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
       try {
         await _appwrite.databases.createDocument(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'events',
+          collectionId: AppwriteService.eventsCollection,
           documentId: ID.unique(),
           data: event.event,
         );
@@ -87,7 +92,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
       try {
         await _appwrite.databases.updateDocument(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'events',
+          collectionId: AppwriteService.eventsCollection,
           documentId: event.id,
           data: event.event,
         );
@@ -101,7 +106,7 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
       try {
         await _appwrite.databases.deleteDocument(
           databaseId: AppwriteService.databaseId,
-          collectionId: 'events',
+          collectionId: AppwriteService.eventsCollection,
           documentId: event.id,
         );
         add(LoadEvents());

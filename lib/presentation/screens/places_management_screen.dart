@@ -21,11 +21,11 @@ class PlacesManagementScreen extends StatefulWidget {
 class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
-  
+
   // For web file picker support
   Uint8List? _webFileBytes;
   String? _webFileName;
-  
+
   // For form state
   File? _formSelectedImage;
   String? _formImageUrl;
@@ -377,7 +377,7 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
     _formIsUploading = false;
     _webFileBytes = null;
     _webFileName = null;
-    
+
     final titleController = TextEditingController(text: place?['name']);
     final descController = TextEditingController(text: place?['description']);
     final latController = TextEditingController(
@@ -472,12 +472,13 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                         try {
                           final appwrite = AppwriteService();
                           String fileId;
-                          
+
                           if (_webFileBytes != null) {
                             // Web file upload
                             fileId = await appwrite.uploadImageBytes(
                               _webFileBytes!,
-                              _webFileName ?? 'place_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                              _webFileName ??
+                                  'place_${DateTime.now().millisecondsSinceEpoch}.jpg',
                             );
                           } else {
                             // Native file upload
@@ -486,7 +487,7 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                               'place_${DateTime.now().millisecondsSinceEpoch}',
                             );
                           }
-                          
+
                           _formImageUrl = appwrite.getImageUrl(
                             AppwriteService.placesBucket,
                             fileId,
@@ -621,13 +622,17 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
             builder: (context, candidateData, rejectedData) {
               final isDragging = candidateData.isNotEmpty;
               return MouseRegion(
-                cursor: isUploading ? MouseCursor.defer : SystemMouseCursors.click,
+                cursor: isUploading
+                    ? MouseCursor.defer
+                    : SystemMouseCursors.click,
                 child: Container(
                   width: double.infinity,
                   height: 120,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDragging ? AppColors.dzGreen : Colors.grey.shade300,
+                      color: isDragging
+                          ? AppColors.dzGreen
+                          : Colors.grey.shade300,
                       width: isDragging ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -669,15 +674,15 @@ class _PlacesManagementScreenState extends State<PlacesManagementScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                              color: Colors.grey.shade100,
-                              child: const Center(
-                                child: Icon(
-                                  LucideIcons.image,
-                                  size: 40,
-                                  color: Colors.grey,
+                                  color: Colors.grey.shade100,
+                                  child: const Center(
+                                    child: Icon(
+                                      LucideIcons.image,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                           ),
                         )
                       else
