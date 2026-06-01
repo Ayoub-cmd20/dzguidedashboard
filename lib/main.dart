@@ -20,6 +20,9 @@ import 'logic/blocs/events/events_bloc.dart';
 import 'logic/blocs/events/events_event.dart';
 import 'logic/blocs/settings/settings_bloc.dart';
 import 'logic/blocs/settings/settings_state.dart';
+import 'logic/blocs/theme/theme_bloc.dart';
+import 'logic/blocs/theme/theme_event.dart';
+import 'logic/blocs/theme/theme_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,29 +60,36 @@ class DZGuideAdminApp extends StatelessWidget {
         BlocProvider(
           create: (context) => SettingsBloc(),
         ),
+        BlocProvider(
+          create: (context) => ThemeBloc()..add(LoadTheme()),
+        ),
       ],
-      child: BlocBuilder<SettingsBloc, SettingsState>(
-        builder: (context, state) {
-          return MaterialApp(
-            title: 'DZ Guide Admin Dashboard',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: state.themeMode,
-            locale: state.locale,
-            home: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                if (state is Authenticated) {
-                  return const MainLayout();
-                } else if (state is AuthLoading) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                } else {
-                  return const LoginScreen();
-                }
-              },
-            ),
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return BlocBuilder<SettingsBloc, SettingsState>(
+            builder: (context, settingsState) {
+              return MaterialApp(
+                title: 'DZ Guide Admin Dashboard',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeState.themeMode,
+                locale: settingsState.locale,
+                home: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, authState) {
+                    if (authState is Authenticated) {
+                      return const MainLayout();
+                    } else if (authState is AuthLoading) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    } else {
+                      return const LoginScreen();
+                    }
+                  },
+                ),
+              );
+            },
           );
         },
       ),

@@ -19,8 +19,8 @@ class AnalyticsFunctionService {
       );
 
       if (execution.status == 'completed') {
-        // Parse the response body
-        final response = execution.response;
+        // FIXED: Changed execution.response to execution.responseBody
+        final response = execution.responseBody;
         if (response.isNotEmpty) {
           return {
             'success': true,
@@ -52,13 +52,14 @@ class AnalyticsFunctionService {
       );
 
       if (executions.total > 0) {
-        final lastExecution = executions.documents.first;
+        // FIXED: Changed executions.documents to executions.executions
+        final lastExecution = executions.executions.first;
         return {
           'success': true,
           'status': lastExecution.status,
-          'createdAt': lastExecution.createdAt,
-          'response': lastExecution.response,
-          'error': lastExecution.error,
+          'createdAt': lastExecution.$createdAt, // Changed to $createdAt
+          'response': lastExecution.responseBody, // Changed to responseBody
+          'error': lastExecution.errors, // Changed to errors
         };
       }
 
@@ -81,17 +82,18 @@ class AnalyticsFunctionService {
         queries: [Query.orderDesc('\$createdAt'), Query.limit(limit)],
       );
 
-      return executions.documents
+      // FIXED: Changed executions.documents to executions.executions
+      return executions.executions
           .map(
             (execution) => {
-              'id': execution.$id,
-              'status': execution.status,
-              'createdAt': execution.createdAt,
-              'response': execution.response,
-              'error': execution.error,
-              'duration': execution.duration,
-            },
-          )
+          'id': execution.$id,
+          'status': execution.status,
+          'createdAt': execution.$createdAt, // Changed to $createdAt
+          'response': execution.responseBody, // Changed to responseBody
+          'error': execution.errors, // Changed to errors
+          'duration': execution.duration,
+        },
+      )
           .toList();
     } catch (e) {
       throw Exception('Failed to get execution history: $e');

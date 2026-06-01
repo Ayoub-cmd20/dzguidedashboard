@@ -2,122 +2,137 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 
-class SettingsScreen extends StatefulWidget {
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../logic/blocs/theme/theme_bloc.dart';
+import '../../logic/blocs/theme/theme_event.dart';
+import '../../logic/blocs/theme/theme_state.dart';
+import '../../logic/blocs/settings/settings_bloc.dart';
+import '../../logic/blocs/settings/settings_event.dart';
+import '../../logic/blocs/settings/settings_state.dart';
+
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _emailNotifications = true;
-  bool _pushNotifications = true;
-  bool _darkMode = false;
-  String _selectedLanguage = 'English';
-
-  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 32),
-          _buildAdminProfile(),
-          const SizedBox(height: 32),
-          _buildSettingsSection(
-            title: 'System Preferences',
-            children: [
-              _buildSettingTile(
-                icon: LucideIcons.languages,
-                title: 'Language',
-                subtitle: 'Choose your preferred language',
-                trailing: DropdownButton<String>(
-                  value: _selectedLanguage,
-                  underline: const SizedBox(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() => _selectedLanguage = newValue);
-                    }
-                  },
-                  items: ['English', 'French', 'Arabic']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return BlocBuilder<SettingsBloc, SettingsState>(
+          builder: (context, settingsState) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 32),
+                  _buildAdminProfile(context),
+                  const SizedBox(height: 32),
+                  _buildSettingsSection(
+                    context: context,
+                    title: 'System Preferences',
+                    children: [
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.languages,
+                        title: 'Language',
+                        subtitle: 'Choose your preferred language',
+                        trailing: DropdownButton<String>(
+                          value: settingsState.languageName,
+                          underline: const SizedBox(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              context.read<SettingsBloc>().add(ChangeLanguage(newValue));
+                            }
+                          },
+                          items: ['English', 'French', 'Arabic']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const Divider(),
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.moon,
+                        title: 'Dark Mode',
+                        subtitle: 'Toggle dashboard appearance',
+                        trailing: Switch(
+                          value: themeState.isDarkMode,
+                          activeThumbColor: AppColors.dzGreen,
+                          onChanged: (val) => context.read<ThemeBloc>().add(ToggleGlobalTheme(val)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSettingsSection(
+                    context: context,
+                    title: 'Notifications',
+                    children: [
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.mail,
+                        title: 'Email Notifications',
+                        subtitle: 'Receive daily summary of inquiries',
+                        trailing: Switch(
+                          value: true,
+                          activeThumbColor: AppColors.dzGreen,
+                          onChanged: (val) {},
+                        ),
+                      ),
+                      const Divider(),
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.bellRing,
+                        title: 'Push Notifications',
+                        subtitle: 'Get real-time alerts for new bookings',
+                        trailing: Switch(
+                          value: true,
+                          activeThumbColor: AppColors.dzGreen,
+                          onChanged: (val) {},
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSettingsSection(
+                    context: context,
+                    title: 'Security',
+                    children: [
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.lock,
+                        title: 'Change Password',
+                        subtitle: 'Last changed 3 months ago',
+                        onTap: () {},
+                      ),
+                      const Divider(),
+                      _buildSettingTile(
+                        context: context,
+                        icon: LucideIcons.shieldCheck,
+                        title: 'Two-Factor Authentication',
+                        subtitle: 'Add an extra layer of security',
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+                  const Center(
+                    child: Text(
+                      'DZ Guide Dashboard v1.0.0',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
-              const Divider(),
-              _buildSettingTile(
-                icon: LucideIcons.moon,
-                title: 'Dark Mode',
-                subtitle: 'Toggle dashboard appearance',
-                trailing: Switch(
-                  value: _darkMode,
-                  activeThumbColor: AppColors.dzGreen,
-                  onChanged: (val) => setState(() => _darkMode = val),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSettingsSection(
-            title: 'Notifications',
-            children: [
-              _buildSettingTile(
-                icon: LucideIcons.mail,
-                title: 'Email Notifications',
-                subtitle: 'Receive daily summary of inquiries',
-                trailing: Switch(
-                  value: _emailNotifications,
-                  activeThumbColor: AppColors.dzGreen,
-                  onChanged: (val) => setState(() => _emailNotifications = val),
-                ),
-              ),
-              const Divider(),
-              _buildSettingTile(
-                icon: LucideIcons.bellRing,
-                title: 'Push Notifications',
-                subtitle: 'Get real-time alerts for new bookings',
-                trailing: Switch(
-                  value: _pushNotifications,
-                  activeThumbColor: AppColors.dzGreen,
-                  onChanged: (val) => setState(() => _pushNotifications = val),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSettingsSection(
-            title: 'Security',
-            children: [
-              _buildSettingTile(
-                icon: LucideIcons.lock,
-                title: 'Change Password',
-                subtitle: 'Last changed 3 months ago',
-                onTap: () {},
-              ),
-              const Divider(),
-              _buildSettingTile(
-                icon: LucideIcons.shieldCheck,
-                title: 'Two-Factor Authentication',
-                subtitle: 'Add an extra layer of security',
-                onTap: () {},
-              ),
-            ],
-          ),
-          const SizedBox(height: 48),
-          const Center(
-            child: Text(
-              'DZ Guide Dashboard v1.0.0',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-            ),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -140,17 +155,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildAdminProfile() {
+  Widget _buildAdminProfile(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor,
+            color: AppColors.shadowColor.withValues(alpha: 0.1),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -191,8 +206,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.background,
-              foregroundColor: AppColors.textPrimary,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -204,17 +219,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingsSection({required String title, required List<Widget> children}) {
+  Widget _buildSettingsSection({required BuildContext context, required String title, required List<Widget> children}) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor,
+            color: AppColors.shadowColor.withValues(alpha: 0.1),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -233,6 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSettingTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -244,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: AppColors.dzGreen, size: 20),
